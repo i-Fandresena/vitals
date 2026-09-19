@@ -1,0 +1,481 @@
+// Modèle de données serveur — Vitals
+//
+// Ce schéma est le miroir du modèle local Drift (mobile/lib/data/local/tables/).
+// Toute modification ici doit être répercutée là-bas, et inversement.
+// Voir docs/02-modele-donnees.md pour les principes et le diagramme.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Énumérations
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  AGENT_COMMUNAUTAIRE
+  INFIRMIER
+  SAGE_FEMME
+  RESPONSABLE_CSB
+  ADMIN_NATIONAL
+}
+
+enum Sex {
+  F
+  M
+}
+
+/// Type de consultation générale. Les CPN, vaccinations et activités de
+/// planification familiale ont leurs propres tables.
+enum ConsultationType {
+  CURATIVE /// Consultation externe curative
+  ENFANT /// Consultation du nourrisson / enfant
+  POSTNATALE
+  AUTRE
+}
+
+/// Antigènes du Programme Élargi de Vaccination.
+/// ⚠️ À faire valider par un référent PEV avant le pilote.
+enum VaccineCode {
+  BCG
+  VPO /// Polio oral
+  VPI /// Polio inactivé
+  PENTA /// DTC-HepB-Hib
+  PNEUMO /// Pneumocoque conjugué
+  ROTA
+  VAR /// Rougeole
+  RR /// Rougeole-Rubéole
+  VAT /// Tétanos, femme en âge de procréer
+  AUTRE
+}
+
+enum FamilyPlanningMethod {
+  PILULE
+  INJECTABLE
+  IMPLANT
+  DIU
+  PRESERVATIF_MASCULIN
+  PRESERVATIF_FEMININ
+  COLLIER_DU_CYCLE
+  MAMA /// Méthode de l'allaitement maternel et de l'aménorrhée
+  LIGATURE_TUBAIRE
+  VASECTOMIE
+  CONTRACEPTION_URGENCE
+  AUTRE
+}
+
+enum FamilyPlanningActType {
+  NOUVELLE_ADHERENTE
+  RENOUVELLEMENT
+  CHANGEMENT_METHODE
+  ARRET
+}
+
+enum PregnancyOutcome {
+  EN_COURS
+  ACCOUCHEMENT_VIVANT
+  MORT_NE
+  AVORTEMENT
+  PERDUE_DE_VUE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  ARCHIVE
+  CANCEL
+  LOGIN
+  LOGIN_FAILED
+  SYNC_CONFLICT
+  EXPORT
+}
+
+// ---------------------------------------------------------------------------
+// Découpage géographique
+//
+// Présent dès le MVP alors que seul le niveau CSB est exploité : le rattachement
+// est ce qui rend possible l'agrégation par district et région du CDC §5 sans
+// reprise de données ultérieure. Coût aujourd'hui : deux tables de référence.
+// ---------------------------------------------------------------------------
+
+model Region {
+  id        String     @id @db.Uuid
+  code      String     @unique
+  name      String
+  districts District[]
+
+  @@map("regions")
+}
+
+model District {
+  id       String @id @db.Uuid
+  code     String @unique
+  name     String
+  regionId String @map("region_id") @db.Uuid
+  region   Region @relation(fields: [regionId], references: [id])
+  csbs     Csb[]
+
+  @@index([regionId])
+  @@map("districts")
+}
+
+model Csb {
+  id         String @id @db.Uuid
+  /// Code du centre, utilisé comme préfixe des identifiants lisibles de dossier
+  code       String @unique
+  name       String
+  /// Commune de rattachement, simple libellé : le MVP n'agrège pas à ce niveau
+  commune    String?
+  districtId String @map("district_id") @db.Uuid
+
+  /// Vrai si aucune sage-femme n'est affectée : les infirmiers du centre sont
+  /// alors autorisés à saisir les CPN (voir docs/01-matrice-droits.md).
+  allowsNurseAntenatalCare Boolean @default(false) @map("allows_nurse_antenatal_care")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  district      District       @relation(fields: [districtId], references: [id])
+  users         User[]
+  beneficiaries Beneficiary[]
+  auditLogs     AuditLog[]
+
+  @@index([districtId])
+  @@map("csbs")
+}
+
+// ---------------------------------------------------------------------------
+// Utilisateurs
+// ---------------------------------------------------------------------------
+
+model User {
+  id String @id @db.Uuid
+
+  /// Identifiant de connexion : matricule ou nom d'usage, pas une adresse
+  /// e-mail — le personnel des CSB n'en a pas systématiquement.
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  role         UserRole
+  phone        String?
+
+  /// Rattachement : un utilisateur n'accède qu'aux dossiers de son CSB.
+  /// Nul uniquement pour ADMIN_NATIONAL, qui n'accède à aucun dossier.
+  csbId String? @map("csb_id") @db.Uuid
+
+  isActive    Boolean   @default(true) @map("is_active")
+  lastLoginAt DateTime? @map("last_login_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  csb           Csb?           @relation(fields: [csbId], references: [id])
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@index([csbId])
+  @@map("users")
+}
+
+/// Jetons de rafraîchissement, stockés hachés. Une ligne par appareil, ce qui
+/// permet de révoquer un appareil perdu sans déconnecter les autres.
+model RefreshToken {
+  id        String @id @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+  tokenHash String @unique @map("token_hash")
+
+  /// Identifiant d'appareil, pour tracer les synchronisations et révoquer
+  /// un téléphone perdu — courant sur le terrain.
+  deviceId    String  @map("device_id")
+  deviceLabel String? @map("device_label")
+
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deviceId])
+  @@map("refresh_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Dossier bénéficiaire
+//
+// Seule entité réellement modifiable, donc seule source de conflit de
+// synchronisation (voir docs/00-decisions-techniques.md, D6).
+// ---------------------------------------------------------------------------
+
+model Beneficiary {
+  /// UUID v7 généré sur l'appareil : pas de collision entre CSB hors ligne.
+  id String @id @db.Uuid
+
+  /// Identifiant lisible, dit à voix haute et reporté sur le registre papier.
+  /// Format CSB-<code>-<AA>-<séquence>, ex. CSB-0142-26-00731.
+  localId String @unique @map("local_id")
+
+  firstName String  @map("first_name")
+  lastName  String  @map("last_name")
+  sex       Sex
+  birthDate DateTime @map("birth_date") @db.Date
+
+  /// Beaucoup de bénéficiaires ne connaissent pas leur date de naissance exacte.
+  /// L'âge est alors estimé à la saisie ; le drapeau évite de traiter une
+  /// approximation comme une donnée fiable dans les statistiques.
+  birthDateIsEstimated Boolean @default(false) @map("birth_date_is_estimated")
+
+  phone     String?
+  /// Fokontany de résidence
+  fokontany String?
+  address   String?
+
+  csbId String @map("csb_id") @db.Uuid
+
+  /// Les dossiers s'archivent, ils ne se suppriment jamais (CDC §8).
+  archivedAt DateTime? @map("archived_at")
+
+  // --- Champs de synchronisation ---
+  /// Incrémenté à chaque écriture, sert à détecter les écritures concurrentes.
+  version Int @default(1)
+  /// Horodatage de l'appareil au moment de la saisie : arbitre le conflit.
+  deviceUpdatedAt DateTime @map("device_updated_at")
+  /// Horodatage de réception par le serveur : détecte la dérive d'horloge.
+  serverUpdatedAt DateTime @updatedAt @map("server_updated_at")
+
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  csb                Csb                      @relation(fields: [csbId], references: [id])
+  consultations      Consultation[]
+  vaccinations       Vaccination[]
+  familyPlanningActs FamilyPlanningActivity[]
+  pregnancies        Pregnancy[]
+
+  @@index([csbId])
+  @@index([lastName, firstName])
+  @@index([serverUpdatedAt])
+  @@map("beneficiaries")
+}
+
+// ---------------------------------------------------------------------------
+// Événements de soin
+//
+// Immuables et append-only : ils ne sont jamais modifiés, ce qui les rend
+// insensibles aux conflits de synchronisation. Une correction se fait en
+// annulant l'événement (cancelledAt) et en en créant un nouveau, ce qui
+// préserve la traçabilité exigée au CDC §8.
+// ---------------------------------------------------------------------------
+
+model Consultation {
+  id            String @id @db.Uuid
+  beneficiaryId String @map("beneficiary_id") @db.Uuid
+
+  type ConsultationType
+  /// Date de l'acte, distincte de la date de saisie : une consultation faite
+  /// hors ligne peut être saisie plus tard.
+  occurredOn DateTime @map("occurred_on") @db.Date
+
+  /// Champs structurés : le texte libre n'est pas exploitable en statistiques
+  /// (exigence du ticket 2.4). Les codes restent à aligner sur la nomenclature
+  /// du ministère.
+  motiveCode    String  @map("motive_code")
+  diagnosisCode String? @map("diagnosis_code")
+
+  weightKg          Float? @map("weight_kg")
+  temperatureC      Float? @map("temperature_c")
+  bloodPressureSys  Int?   @map("blood_pressure_sys")
+  bloodPressureDia  Int?   @map("blood_pressure_dia")
+
+  treatmentGiven Boolean @default(false) @map("treatment_given")
+  /// Référence vers une structure de niveau supérieur
+  referred       Boolean @default(false)
+  referredTo     String? @map("referred_to")
+
+  /// Observation libre, jamais utilisée pour les statistiques
+  notes String?
+
+  cancelledAt     DateTime? @map("cancelled_at")
+  cancelReason    String?   @map("cancel_reason")
+
+  recordedByUserId String   @map("recorded_by_user_id") @db.Uuid
+  deviceCreatedAt  DateTime @map("device_created_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  beneficiary Beneficiary @relation(fields: [beneficiaryId], references: [id])
+
+  @@index([beneficiaryId])
+  @@index([occurredOn])
+  @@map("consultations")
+}
+
+model Vaccination {
+  id            String @id @db.Uuid
+  beneficiaryId String @map("beneficiary_id") @db.Uuid
+
+  vaccine    VaccineCode
+  doseNumber Int         @map("dose_number")
+  occurredOn DateTime    @map("occurred_on") @db.Date
+
+  lotNumber String? @map("lot_number")
+
+  cancelledAt  DateTime? @map("cancelled_at")
+  cancelReason String?   @map("cancel_reason")
+
+  recordedByUserId String   @map("recorded_by_user_id") @db.Uuid
+  deviceCreatedAt  DateTime @map("device_created_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  beneficiary Beneficiary @relation(fields: [beneficiaryId], references: [id])
+
+  /// Empêche le doublon créé par une double saisie ou un rejeu de
+  /// synchronisation : un même antigène, même dose, même jour, même personne.
+  @@unique([beneficiaryId, vaccine, doseNumber, occurredOn])
+  @@index([occurredOn])
+  @@map("vaccinations")
+}
+
+model FamilyPlanningActivity {
+  id            String @id @db.Uuid
+  beneficiaryId String @map("beneficiary_id") @db.Uuid
+
+  method     FamilyPlanningMethod
+  actType    FamilyPlanningActType @map("act_type")
+  occurredOn DateTime              @map("occurred_on") @db.Date
+
+  /// Quantité distribuée (plaquettes, préservatifs…). Le suivi de stock est
+  /// hors périmètre MVP (CDC §10) : ce champ décrit l'acte, pas l'inventaire.
+  quantity Int?
+
+  cancelledAt  DateTime? @map("cancelled_at")
+  cancelReason String?   @map("cancel_reason")
+
+  recordedByUserId String   @map("recorded_by_user_id") @db.Uuid
+  deviceCreatedAt  DateTime @map("device_created_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  beneficiary Beneficiary @relation(fields: [beneficiaryId], references: [id])
+
+  @@index([beneficiaryId])
+  @@index([occurredOn])
+  @@map("family_planning_activities")
+}
+
+// ---------------------------------------------------------------------------
+// Suivi de grossesse (CDC §4)
+// ---------------------------------------------------------------------------
+
+model Pregnancy {
+  id            String @id @db.Uuid
+  beneficiaryId String @map("beneficiary_id") @db.Uuid
+
+  /// Date des dernières règles, base du calcul du terme
+  lastPeriodDate     DateTime? @map("last_period_date") @db.Date
+  expectedDeliveryOn DateTime? @map("expected_delivery_on") @db.Date
+
+  /// Nombre de grossesses et d'accouchements antérieurs
+  gravida Int?
+  para    Int?
+
+  outcome     PregnancyOutcome @default(EN_COURS)
+  outcomeDate DateTime?        @map("outcome_date") @db.Date
+
+  version         Int      @default(1)
+  deviceUpdatedAt DateTime @map("device_updated_at")
+  serverUpdatedAt DateTime @updatedAt @map("server_updated_at")
+
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  beneficiary    Beneficiary     @relation(fields: [beneficiaryId], references: [id])
+  prenatalVisits PrenatalVisit[]
+
+  @@index([beneficiaryId])
+  @@map("pregnancies")
+}
+
+model PrenatalVisit {
+  id          String @id @db.Uuid
+  pregnancyId String @map("pregnancy_id") @db.Uuid
+
+  /// Rang de la consultation prénatale : CPN1, CPN2…
+  visitNumber Int      @map("visit_number")
+  occurredOn  DateTime @map("occurred_on") @db.Date
+
+  gestationalAgeWeeks Int?   @map("gestational_age_weeks")
+  weightKg            Float? @map("weight_kg")
+  bloodPressureSys    Int?   @map("blood_pressure_sys")
+  bloodPressureDia    Int?   @map("blood_pressure_dia")
+  fundalHeightCm      Float? @map("fundal_height_cm")
+  fetalHeartRate      Int?   @map("fetal_heart_rate")
+
+  /// Interventions systématiques du suivi prénatal
+  tetanusVaccineGiven Boolean @default(false) @map("tetanus_vaccine_given")
+  ironFolateGiven     Boolean @default(false) @map("iron_folate_given")
+  /// Traitement préventif intermittent du paludisme
+  malariaPreventionGiven Boolean @default(false) @map("malaria_prevention_given")
+  insecticideNetGiven    Boolean @default(false) @map("insecticide_net_given")
+
+  /// Codes de facteurs de risque relevés. Liste plate volontairement : une
+  /// table dédiée n'apporte rien tant que le référentiel n'est pas figé.
+  riskFactorCodes String[] @map("risk_factor_codes")
+
+  referred   Boolean @default(false)
+  referredTo String? @map("referred_to")
+
+  notes String?
+
+  cancelledAt  DateTime? @map("cancelled_at")
+  cancelReason String?   @map("cancel_reason")
+
+  recordedByUserId String   @map("recorded_by_user_id") @db.Uuid
+  deviceCreatedAt  DateTime @map("device_created_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  pregnancy Pregnancy @relation(fields: [pregnancyId], references: [id])
+
+  @@index([pregnancyId])
+  @@index([occurredOn])
+  @@map("prenatal_visits")
+}
+
+// ---------------------------------------------------------------------------
+// Journal d'audit (CDC §8, ticket 3.4)
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id String @id @db.Uuid
+
+  userId String?  @map("user_id") @db.Uuid
+  csbId  String?  @map("csb_id") @db.Uuid
+  action AuditAction
+
+  entityType String  @map("entity_type")
+  entityId   String? @map("entity_id")
+
+  /// Jamais de donnée de santé en clair ici : uniquement les noms des champs
+  /// modifiés, pas leurs valeurs.
+  changedFields String[] @map("changed_fields")
+
+  deviceId String? @map("device_id")
+  ipHash   String? @map("ip_hash")
+
+  /// Les deux horodatages permettent de mesurer la dérive d'horloge des
+  /// appareils, qui arbitre les conflits de synchronisation.
+  deviceTimestamp DateTime? @map("device_timestamp")
+  serverTimestamp DateTime  @default(now()) @map("server_timestamp")
+
+  user User? @relation(fields: [userId], references: [id])
+  csb  Csb?  @relation(fields: [csbId], references: [id])
+
+  @@index([userId])
+  @@index([csbId])
+  @@index([entityType, entityId])
+  @@index([serverTimestamp])
+  @@map("audit_logs")
+}
