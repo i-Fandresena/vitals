@@ -28,7 +28,9 @@ class AuthException extends AppException {
 
 /// Droits insuffisants pour l'action demandée.
 class ForbiddenException extends AppException {
-  const ForbiddenException([super.message = 'Action non autorisée pour votre profil']);
+  const ForbiddenException([
+    super.message = 'Action non autorisée pour votre profil',
+  ]);
 }
 
 /// Saisie invalide renvoyée par le serveur.

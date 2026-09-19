@@ -21,9 +21,9 @@ class AuthRepository {
     required ApiClient apiClient,
     required TokenStore tokenStore,
     required AppDatabase database,
-  })  : _api = apiClient,
-        _tokens = tokenStore,
-        _db = database;
+  }) : _api = apiClient,
+       _tokens = tokenStore,
+       _db = database;
 
   final ApiClient _api;
   final TokenStore _tokens;
@@ -159,7 +159,9 @@ class AuthRepository {
   /// Met le profil en cache local pour permettre un démarrage hors ligne.
   /// Aucun mot de passe n'est stocké, seulement l'identité et le rôle.
   Future<void> _cacheUser(AuthenticatedUser user) async {
-    await _db.into(_db.localUsers).insertOnConflictUpdate(
+    await _db
+        .into(_db.localUsers)
+        .insertOnConflictUpdate(
           LocalUsersCompanion.insert(
             id: user.id,
             username: user.username,
@@ -171,7 +173,9 @@ class AuthRepository {
         );
 
     if (user.csbId != null && user.csbName != null) {
-      await _db.into(_db.csbs).insertOnConflictUpdate(
+      await _db
+          .into(_db.csbs)
+          .insertOnConflictUpdate(
             CsbsCompanion.insert(
               id: user.csbId!,
               // Le code du CSB arrive avec le référentiel complet au ticket 3.1 ;
@@ -184,17 +188,17 @@ class AuthRepository {
   }
 
   Future<AuthenticatedUser?> _cachedUser(String userId) async {
-    final row = await (_db.select(_db.localUsers)
-          ..where((u) => u.id.equals(userId)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.localUsers,
+    )..where((u) => u.id.equals(userId))).getSingleOrNull();
 
     if (row == null) return null;
 
     String? csbName;
     if (row.csbId != null) {
-      final csb = await (_db.select(_db.csbs)
-            ..where((c) => c.id.equals(row.csbId!)))
-          .getSingleOrNull();
+      final csb = await (_db.select(
+        _db.csbs,
+      )..where((c) => c.id.equals(row.csbId!))).getSingleOrNull();
       csbName = csb?.name;
     }
 

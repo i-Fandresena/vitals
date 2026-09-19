@@ -47,15 +47,15 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async {
-          await m.createAll();
-          await _createIndexes();
-        },
-        beforeOpen: (details) async {
-          // Les clés étrangères ne sont pas actives par défaut dans SQLite.
-          await customStatement('PRAGMA foreign_keys = ON');
-        },
-      );
+    onCreate: (m) async {
+      await m.createAll();
+      await _createIndexes();
+    },
+    beforeOpen: (details) async {
+      // Les clés étrangères ne sont pas actives par défaut dans SQLite.
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
 
   /// Index dictés par les trois parcours quotidiens : retrouver une personne
   /// par son nom, ouvrir son historique, compter les actes d'une période.

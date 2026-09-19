@@ -25,7 +25,8 @@ class Csbs extends Table {
   /// Dernière séquence attribuée pour l'année en cours, utilisée pour générer
   /// l'identifiant lisible du prochain dossier sans interroger le serveur.
   IntColumn get lastLocalSequence => integer().withDefault(const Constant(0))();
-  IntColumn get lastLocalSequenceYear => integer().withDefault(const Constant(0))();
+  IntColumn get lastLocalSequenceYear =>
+      integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {id};

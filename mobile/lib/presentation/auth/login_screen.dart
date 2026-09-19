@@ -40,7 +40,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (_formKey.currentState?.validate() != true) return;
 
-    ref.read(authControllerProvider.notifier).signIn(
+    ref
+        .read(authControllerProvider.notifier)
+        .signIn(
           username: _usernameController.text,
           password: _passwordController.text,
         );
@@ -60,7 +62,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppDimens.space24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: AppDimens.maxContentWidth),
+              constraints: const BoxConstraints(
+                maxWidth: AppDimens.maxContentWidth,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -85,12 +89,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       // majuscule automatique, ni correction orthographique.
                       textCapitalization: TextCapitalization.none,
                       keyboardType: TextInputType.text,
-                      inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
+                      inputFormatters: [
+                        FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                      ],
                       decoration: const InputDecoration(
                         labelText: 'Identifiant',
                         prefixIcon: Icon(Icons.person_outline),
                       ),
-                      validator: (value) => (value == null || value.trim().isEmpty)
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
                           ? 'Saisissez votre identifiant'
                           : null,
                       onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
@@ -109,8 +116,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // Afficher le mot de passe évite l'échec silencieux le
                         // plus courant : une faute de frappe invisible.
                         suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _passwordVisible = !_passwordVisible),
+                          onPressed: () => setState(
+                            () => _passwordVisible = !_passwordVisible,
+                          ),
                           icon: Icon(
                             _passwordVisible
                                 ? Icons.visibility_off_outlined
@@ -134,7 +142,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ? const SizedBox(
                               height: 24,
                               width: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2.5),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
                             )
                           : const Text('Se connecter'),
                     ),
@@ -219,9 +229,7 @@ class _ErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
+              style: Theme.of(context).textTheme.bodyLarge
                   ?.copyWith(color: scheme.onErrorContainer),
             ),
           ),

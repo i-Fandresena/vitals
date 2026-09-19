@@ -42,7 +42,8 @@ class SexConverter extends TypeConverter<Sex, String> {
   String toSql(Sex value) => value.code;
 }
 
-class ConsultationTypeConverter extends TypeConverter<ConsultationType, String> {
+class ConsultationTypeConverter
+    extends TypeConverter<ConsultationType, String> {
   const ConsultationTypeConverter();
 
   @override
@@ -64,29 +65,34 @@ class VaccineCodeConverter extends TypeConverter<VaccineCode, String> {
   String toSql(VaccineCode value) => value.code;
 }
 
-class FamilyPlanningMethodConverter extends TypeConverter<FamilyPlanningMethod, String> {
+class FamilyPlanningMethodConverter
+    extends TypeConverter<FamilyPlanningMethod, String> {
   const FamilyPlanningMethodConverter();
 
   @override
   FamilyPlanningMethod fromSql(String fromDb) =>
-      FamilyPlanningMethod.tryParse(fromDb) ?? _unknown('FamilyPlanningMethod', fromDb);
+      FamilyPlanningMethod.tryParse(fromDb) ??
+      _unknown('FamilyPlanningMethod', fromDb);
 
   @override
   String toSql(FamilyPlanningMethod value) => value.code;
 }
 
-class FamilyPlanningActTypeConverter extends TypeConverter<FamilyPlanningActType, String> {
+class FamilyPlanningActTypeConverter
+    extends TypeConverter<FamilyPlanningActType, String> {
   const FamilyPlanningActTypeConverter();
 
   @override
   FamilyPlanningActType fromSql(String fromDb) =>
-      FamilyPlanningActType.tryParse(fromDb) ?? _unknown('FamilyPlanningActType', fromDb);
+      FamilyPlanningActType.tryParse(fromDb) ??
+      _unknown('FamilyPlanningActType', fromDb);
 
   @override
   String toSql(FamilyPlanningActType value) => value.code;
 }
 
-class PregnancyOutcomeConverter extends TypeConverter<PregnancyOutcome, String> {
+class PregnancyOutcomeConverter
+    extends TypeConverter<PregnancyOutcome, String> {
   const PregnancyOutcomeConverter();
 
   @override

@@ -102,14 +102,26 @@ abstract final class AppTheme {
         ),
         border: _fieldBorder(scheme.outline),
         enabledBorder: _fieldBorder(scheme.outline),
-        focusedBorder: _fieldBorder(scheme.primary, AppDimens.borderWidthFocused),
+        focusedBorder: _fieldBorder(
+          scheme.primary,
+          AppDimens.borderWidthFocused,
+        ),
         errorBorder: _fieldBorder(scheme.error),
-        focusedErrorBorder: _fieldBorder(scheme.error, AppDimens.borderWidthFocused),
-        labelStyle: textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
-        floatingLabelStyle: textTheme.bodyMedium?.copyWith(color: scheme.primary),
+        focusedErrorBorder: _fieldBorder(
+          scheme.error,
+          AppDimens.borderWidthFocused,
+        ),
+        labelStyle: textTheme.bodyLarge?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
+        floatingLabelStyle: textTheme.bodyMedium?.copyWith(
+          color: scheme.primary,
+        ),
         errorStyle: textTheme.bodyMedium?.copyWith(color: scheme.error),
         // Le texte saisi doit être plus lisible que l'étiquette.
-        hintStyle: textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+        hintStyle: textTheme.bodyLarge?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
       ),
 
       filledButtonTheme: FilledButtonThemeData(
@@ -135,7 +147,10 @@ abstract final class AppTheme {
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          minimumSize: const Size(AppDimens.minTouchTarget, AppDimens.minTouchTarget),
+          minimumSize: const Size(
+            AppDimens.minTouchTarget,
+            AppDimens.minTouchTarget,
+          ),
           textStyle: textTheme.titleSmall,
         ),
       ),
@@ -152,12 +167,20 @@ abstract final class AppTheme {
 
       listTileTheme: ListTileThemeData(
         minVerticalPadding: AppDimens.space12,
-        contentPadding: const EdgeInsets.symmetric(horizontal: AppDimens.space16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppDimens.space16,
+        ),
         titleTextStyle: textTheme.titleMedium,
-        subtitleTextStyle: textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+        subtitleTextStyle: textTheme.bodyMedium?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
       ),
 
-      dividerTheme: DividerThemeData(color: scheme.outlineVariant, space: 1, thickness: 1),
+      dividerTheme: DividerThemeData(
+        color: scheme.outlineVariant,
+        space: 1,
+        thickness: 1,
+      ),
 
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -172,7 +195,10 @@ abstract final class AppTheme {
     );
   }
 
-  static OutlineInputBorder _fieldBorder(Color color, [double width = AppDimens.borderWidth]) {
+  static OutlineInputBorder _fieldBorder(
+    Color color, [
+    double width = AppDimens.borderWidth,
+  ]) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppDimens.radiusMedium),
       borderSide: BorderSide(color: color, width: width),

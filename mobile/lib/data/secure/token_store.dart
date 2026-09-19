@@ -27,7 +27,7 @@ class SessionTokens {
 /// expose au pire une session révocable, jamais un mot de passe.
 class TokenStore {
   TokenStore([FlutterSecureStorage? storage])
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 

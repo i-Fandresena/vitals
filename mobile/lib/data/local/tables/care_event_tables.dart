@@ -30,7 +30,8 @@ class Consultations extends Table {
   IntColumn get bloodPressureSys => integer().nullable()();
   IntColumn get bloodPressureDia => integer().nullable()();
 
-  BoolColumn get treatmentGiven => boolean().withDefault(const Constant(false))();
+  BoolColumn get treatmentGiven =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get referred => boolean().withDefault(const Constant(false))();
   TextColumn get referredTo => text().nullable()();
 
@@ -72,8 +73,8 @@ class Vaccinations extends Table {
   /// un rejeu de la file de synchronisation. Même contrainte côté serveur.
   @override
   List<String> get customConstraints => [
-        'UNIQUE (beneficiary_id, vaccine, dose_number, occurred_on)',
-      ];
+    'UNIQUE (beneficiary_id, vaccine, dose_number, occurred_on)',
+  ];
 }
 
 class FamilyPlanningActivities extends Table {
@@ -81,7 +82,8 @@ class FamilyPlanningActivities extends Table {
   TextColumn get beneficiaryId => text()();
 
   TextColumn get method => text().map(const FamilyPlanningMethodConverter())();
-  TextColumn get actType => text().map(const FamilyPlanningActTypeConverter())();
+  TextColumn get actType =>
+      text().map(const FamilyPlanningActTypeConverter())();
   TextColumn get occurredOn => text().withLength(min: 10, max: 10)();
 
   /// Quantité distribuée. Décrit l'acte, pas l'inventaire : le suivi de stock
@@ -146,10 +148,14 @@ class PrenatalVisits extends Table {
 
   /// Interventions systématiques du suivi prénatal. Booléens dédiés plutôt
   /// qu'une liste d'actes : ce sont exactement les indicateurs à remonter.
-  BoolColumn get tetanusVaccineGiven => boolean().withDefault(const Constant(false))();
-  BoolColumn get ironFolateGiven => boolean().withDefault(const Constant(false))();
-  BoolColumn get malariaPreventionGiven => boolean().withDefault(const Constant(false))();
-  BoolColumn get insecticideNetGiven => boolean().withDefault(const Constant(false))();
+  BoolColumn get tetanusVaccineGiven =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get ironFolateGiven =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get malariaPreventionGiven =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get insecticideNetGiven =>
+      boolean().withDefault(const Constant(false))();
 
   TextColumn get riskFactorCodes =>
       text().map(const StringListConverter()).withDefault(const Constant(''))();

@@ -46,7 +46,10 @@ class AuthController extends Notifier<AuthState> {
   bool _busy = false;
   bool get isBusy => _busy;
 
-  Future<void> signIn({required String username, required String password}) async {
+  Future<void> signIn({
+    required String username,
+    required String password,
+  }) async {
     if (_busy) return;
     _busy = true;
     state = const AuthLoading();
@@ -72,5 +75,6 @@ class AuthController extends Notifier<AuthState> {
   }
 }
 
-final authControllerProvider =
-    NotifierProvider<AuthController, AuthState>(AuthController.new);
+final authControllerProvider = NotifierProvider<AuthController, AuthState>(
+  AuthController.new,
+);

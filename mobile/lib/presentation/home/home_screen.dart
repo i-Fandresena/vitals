@@ -59,12 +59,21 @@ class HomeScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user.fullName, style: theme.textTheme.titleMedium),
+                          Text(
+                            user.fullName,
+                            style: theme.textTheme.titleMedium,
+                          ),
                           const SizedBox(height: AppDimens.space2),
-                          Text(user.role.label, style: theme.textTheme.bodyMedium),
+                          Text(
+                            user.role.label,
+                            style: theme.textTheme.bodyMedium,
+                          ),
                           if (user.csbName != null) ...[
                             const SizedBox(height: AppDimens.space2),
-                            Text(user.csbName!, style: theme.textTheme.bodyMedium),
+                            Text(
+                              user.csbName!,
+                              style: theme.textTheme.bodyMedium,
+                            ),
                           ],
                         ],
                       ),

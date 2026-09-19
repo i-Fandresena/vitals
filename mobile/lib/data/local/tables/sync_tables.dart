@@ -23,8 +23,9 @@ class SyncQueueEntries extends Table {
   /// tables métier.
   TextColumn get payload => text()();
 
-  TextColumn get status =>
-      text().map(const SyncStatusConverter()).withDefault(const Constant('PENDING'))();
+  TextColumn get status => text()
+      .map(const SyncStatusConverter())
+      .withDefault(const Constant('PENDING'))();
 
   IntColumn get attemptCount => integer().withDefault(const Constant(0))();
 
@@ -39,11 +40,11 @@ class SyncQueueEntries extends Table {
 
   @override
   List<String> get customConstraints => [
-        // Une seule mutation en attente par enregistrement : la suivante
-        // remplace la précédente plutôt que de s'empiler, sinon une fiche
-        // corrigée trois fois hors ligne enverrait trois versions successives.
-        'UNIQUE (entity_type, entity_id, operation)',
-      ];
+    // Une seule mutation en attente par enregistrement : la suivante
+    // remplace la précédente plutôt que de s'empiler, sinon une fiche
+    // corrigée trois fois hors ligne enverrait trois versions successives.
+    'UNIQUE (entity_type, entity_id, operation)',
+  ];
 }
 
 /// Journal d'audit local (CDC §8, ticket 3.4).

@@ -1,0 +1,104 @@
+name: CI
+
+# Vérifie que le dépôt reste compilable et analysable. Volontairement minimal
+# (ticket 1.1) : lint, types et tests. Le build de l'APK n'est pas fait ici —
+# il demande le SDK Android et le NDK, soit plusieurs gigaoctets par exécution,
+# pour une vérification que le développeur fait déjà localement. Il sera ajouté
+# au ticket 4.3, quand un APK signé devra être produit à chaque version.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Une seule exécution par branche : annule la précédente si on pousse à nouveau.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend — types, lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      # Le client Prisma est généré, pas versionné : sans cette étape, la
+      # vérification de types échoue sur des symboles absents.
+      - name: Générer le client Prisma
+        run: npx prisma generate
+
+      - name: Vérification des types
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+  mobile:
+    name: Mobile — analyse, tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # Le code Drift est généré, pas versionné.
+      - name: Générer le code Drift
+        run: dart run build_runner build
+
+      - name: Format
+        run: dart format --set-exit-if-changed lib test
+
+      - name: Analyse
+        run: flutter analyze
+
+      - name: Tests
+        run: flutter test
+
+  secrets:
+    name: Aucun secret commité
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Garde-fou explicite : le projet traite des données de santé, un .env
+      # ou un keystore poussé par inadvertance doit faire échouer la CI plutôt
+      # que d'être découvert plus tard dans l'historique.
+      - name: Rechercher des fichiers sensibles
+        run: |
+          set -euo pipefail
+          found=$(git ls-files \
+            | grep -E '(^|/)\.env($|\.)|\.(pem|p12|jks|keystore)$' \
+            | grep -v '\.env\.example$' || true)
+          if [ -n "$found" ]; then
+            echo "Fichiers sensibles détectés dans le dépôt :"
+            echo "$found"
+            exit 1
+          fi
+          echo "Aucun fichier sensible versionné."
