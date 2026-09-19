@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { createHash } from 'node:crypto';
@@ -40,9 +40,14 @@ export class AuthController {
     await this.authService.logout(user.id, user.deviceId);
   }
 
-  /** GET-like : profil de l'utilisateur connecté, utile au démarrage de l'app. */
-  @Post('me')
-  @HttpCode(HttpStatus.OK)
+  /**
+   * GET /api/v1/auth/me — profil de l'utilisateur connecté.
+   *
+   * Sert à vérifier qu'un jeton est toujours accepté. L'application mobile ne
+   * s'en sert pas au démarrage : elle lit le profil dans sa base locale, pour
+   * pouvoir s'ouvrir sans réseau.
+   */
+  @Get('me')
   me(@CurrentUser() user: AuthenticatedUser) {
     return user;
   }

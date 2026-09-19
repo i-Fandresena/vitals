@@ -62,7 +62,7 @@ vérifier : si le compte inexistant répondait nettement plus vite, on pourrait
 ### 1.4 Une route protégée refuse un appel sans jeton
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000/api/v1/auth/me
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/api/v1/auth/me
 ```
 
 ✅ `401`.
@@ -134,7 +134,11 @@ cd mobile
 flutter build apk --release --split-per-abi
 ```
 
-✅ Les fichiers apparaissent dans `build/app/outputs/flutter-apk/`.
+✅ Trois fichiers apparaissent dans `build/app/outputs/flutter-apk/`, d'environ
+17 Mo (`armeabi-v7a`), 19 Mo (`arm64-v8a`) et 21 Mo (`x86_64`).
+
+Pour un CSB, c'est la variante `armeabi-v7a` qui sert dans la plupart des cas.
+Ne jamais distribuer `app-debug.apk` : il pèse 163 Mo.
 
 ⚠️ Ces APK sont signés avec la **clé de débogage** : ils servent aux tests, pas
 à une distribution. La signature réelle est l'objet du ticket 4.3.

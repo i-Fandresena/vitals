@@ -49,7 +49,7 @@ marquées publiques.
 | `POST` | `/auth/login` | ✅ | Connexion, renvoie les jetons |
 | `POST` | `/auth/refresh` | ✅ | Renouvelle les jetons (rotation) |
 | `POST` | `/auth/logout` | ❌ | Déconnecte l'appareil courant |
-| `POST` | `/auth/me` | ❌ | Profil de l'utilisateur connecté |
+| `GET` | `/auth/me` | ❌ | Profil de l'utilisateur connecté |
 
 ## Tester avec curl
 
@@ -98,7 +98,7 @@ curl -X POST http://localhost:3000/api/v1/auth/login \
 ### Route authentifiée
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/auth/me \
+curl http://localhost:3000/api/v1/auth/me \
   -H "Authorization: Bearer <accessToken>"
 ```
 

@@ -29,10 +29,27 @@ Comptes de développement : voir [backend/README.md](../backend/README.md).
 
 ```bash
 flutter build apk --debug
-flutter build apk --release --dart-define=API_BASE_URL=https://api.exemple.org/api/v1
+
+flutter build apk --release --split-per-abi \
+  --dart-define=API_BASE_URL=https://api.exemple.org/api/v1
 ```
 
-Le fichier atterrit dans `build/app/outputs/flutter-apk/`.
+Les fichiers atterrissent dans `build/app/outputs/flutter-apk/`.
+
+**Toujours utiliser `--split-per-abi` pour distribuer.** Un APK universel
+embarque les bibliothèques natives des trois architectures ; découpé, chaque
+appareil ne télécharge que la sienne. Tailles mesurées sur la Phase 1 :
+
+| Variante | Taille | Pour |
+|---|---|---|
+| `app-armeabi-v7a-release.apk` | 17,0 Mo | appareils 32 bits, les plus courants en CSB |
+| `app-arm64-v8a-release.apk` | 19,4 Mo | appareils 64 bits récents |
+| `app-x86_64-release.apk` | 20,8 Mo | émulateurs — inutile sur le terrain |
+| `app-debug.apk` | 163 Mo | développement seulement, ne jamais distribuer |
+
+L'écart entre 17 Mo et 163 Mo n'est pas un détail : l'APK se transfère souvent
+par clé USB ou par partage direct entre téléphones, sur des connexions où
+163 Mo sont hors de portée.
 
 ## Organisation
 
