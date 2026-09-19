@@ -9,8 +9,13 @@
 
 **Flutter 3.47.5 / Dart 3.13.4**, cible Android en priorité, livrable APK.
 
-- `minSdkVersion 21` (Android 5.0) : les appareils des CSB sont souvent anciens,
-  descendre plus bas n'est plus supporté par les dépendances de chiffrement.
+- `minSdkVersion 24` (Android 7.0, 2016) — valeur plancher de Flutter 3.47, qui
+  ne supporte plus les versions antérieures.
+
+  ⚠️ **Conséquence à vérifier sur le terrain** : les appareils sous Android 5 ou
+  6 ne pourront pas installer l'application. Si des CSB pilotes en utilisent, il
+  faut le savoir avant le déploiement, car la seule issue serait de rétrograder
+  Flutter ou de changer d'appareil. À contrôler pendant les tests du ticket 4.3.
 - `targetSdkVersion` : dernier stable supporté par Flutter.
 - Architecture applicative en trois couches : `data/` (Drift, API, sync),
   `domain/` (entités et règles métier, sans dépendance framework),

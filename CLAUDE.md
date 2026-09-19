@@ -14,7 +14,7 @@ Madagascar. Dépôt : `i-Fandresena/vitals`.
 
 ## Stack
 
-- **Mobile** : Flutter 3.47.5 / Dart 3.13.4, cible Android (APK), `minSdk 21`
+- **Mobile** : Flutter 3.47.5 / Dart 3.13.4, cible Android (APK), `minSdk 24`
 - **Base locale** : Drift (SQLite) + SQLCipher — source de vérité locale
 - **Backend** : NestJS + PostgreSQL + Prisma
 - **Auth** : JWT (access 15 min + refresh 30 j), `flutter_secure_storage`

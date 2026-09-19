@@ -1,0 +1,49 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    # Une donnée de santé mal typée doit bloquer le build, pas produire un
+    # avertissement qu'on finit par ignorer.
+    invalid_assignment: error
+    missing_return: error
+    unused_import: error
+    dead_code: error
+
+  exclude:
+    # Code généré par Drift : il n'est pas écrit à la main, le critiquer
+    # n'apporte rien.
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - build/**
+    - android/**
+
+linter:
+  rules:
+    # --- Lisibilité ---
+    always_declare_return_types: true
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    directives_ordering: true
+    sort_child_properties_last: true
+
+    # --- Sûreté ---
+    avoid_dynamic_calls: true
+    avoid_slow_async_io: true
+    cancel_subscriptions: true
+    close_sinks: true
+    only_throw_errors: true
+    test_types_in_equals: true
+    throw_in_finally: true
+    unawaited_futures: true
+
+    # --- Performance sur appareils modestes ---
+    avoid_unnecessary_containers: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    use_decorated_box: true
+
+    # --- Données sensibles ---
+    # `print` écrit dans le journal système, lisible par d'autres applications
+    # sur les anciennes versions d'Android. Aucune trace ne doit y passer.
+    avoid_print: true

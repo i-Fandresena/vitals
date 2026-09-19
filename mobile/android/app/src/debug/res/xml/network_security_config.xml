@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Configuration réseau des builds de débogage uniquement.
+
+  Autorise le trafic en clair : l'API de développement tourne en http://, et
+  Android le bloque par défaut depuis la version 9. L'autorisation est large
+  plutôt que limitée à 10.0.2.2, parce qu'un test sur appareil réel passe par
+  l'adresse du poste sur le réseau local, qui change d'un développeur à l'autre.
+
+  Ce fichier ne remplace celui de src/main/ que pour la variante debug : un APK
+  de release conserve l'interdiction du trafic en clair, y compris celui-ci
+  n'étant jamais empaqueté dedans.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

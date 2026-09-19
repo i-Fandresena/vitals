@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Configuration réseau des builds de production.
+
+  Le trafic en clair est interdit : les échanges transportent des données de
+  santé, et le réseau mobile d'un CSB n'est pas un réseau de confiance. Une API
+  servie en http:// sera refusée par l'application, ce qui est voulu — mieux
+  vaut un échec visible au déploiement qu'une synchronisation en clair.
+
+  La variante de développement, qui autorise l'adresse locale, est dans
+  src/debug/res/xml/network_security_config.xml et ne part jamais en release.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>
