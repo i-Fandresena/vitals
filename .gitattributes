@@ -1,0 +1,27 @@
+# Normalise les fins de ligne : LF dans le dépôt, natif dans la copie de travail
+* text=auto eol=lf
+
+# Scripts Windows
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Scripts Unix (gradlew doit rester en LF pour être exécutable)
+*.sh      text eol=lf
+gradlew   text eol=lf
+
+# Binaires
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.ttf  binary
+*.otf  binary
+*.woff binary
+*.woff2 binary
+*.jar  binary
+*.keystore binary
+*.jks  binary
+*.apk  binary
+*.aab  binary

@@ -1,0 +1,62 @@
+# ---------- Outils / éditeurs ----------
+.kilo/
+.idea/
+.vscode/
+*.iml
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---------- Secrets ----------
+# Aucun secret ne doit être commité : données de santé sensibles (CDC §8)
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.jks
+*.keystore
+key.properties
+
+# ---------- Flutter / Dart (mobile/) ----------
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.lock.bak
+
+# Android
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/debug/
+mobile/android/app/profile/
+mobile/android/app/release/
+mobile/android/captures/
+*.apk
+*.aab
+
+# iOS (hors périmètre MVP, ignoré par précaution)
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+
+# Code généré par build_runner (Drift, json_serializable)
+*.g.dart
+*.freezed.dart
+*.drift.dart
+
+# ---------- Node / NestJS (backend/) ----------
+node_modules/
+dist/
+coverage/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# ---------- Divers ----------
+*.tmp
+/tmp/
