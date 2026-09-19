@@ -11,6 +11,8 @@ Madagascar. Dépôt : `i-Fandresena/vitals`.
 | [docs/Maternal-AI-CSB-Analyse-et-Backlog.md](docs/Maternal-AI-CSB-Analyse-et-Backlog.md) | Backlog de tickets, phases 0 à 4 |
 | [docs/00-decisions-techniques.md](docs/00-decisions-techniques.md) | Décisions figées : stack, identifiants, QR, sync |
 | [docs/01-matrice-droits.md](docs/01-matrice-droits.md) | Qui a le droit de faire quoi |
+| [docs/02-modele-donnees.md](docs/02-modele-donnees.md) | Modèle de données et principes de synchronisation |
+| [docs/03-verification-phase-1.md](docs/03-verification-phase-1.md) | Procédure de vérification manuelle |
 
 ## Stack
 

@@ -41,6 +41,8 @@ vitals/
 | [Analyse et backlog](docs/Maternal-AI-CSB-Analyse-et-Backlog.md) | Tickets, phases 0 à 4 |
 | [Décisions techniques](docs/00-decisions-techniques.md) | Stack, identifiants, QR code, stratégie de synchronisation |
 | [Matrice des droits](docs/01-matrice-droits.md) | Permissions par profil utilisateur |
+| [Modèle de données](docs/02-modele-donnees.md) | Tables, principes, pourquoi les événements de soin sont immuables |
+| [Vérification de la Phase 1](docs/03-verification-phase-1.md) | Comment constater soi-même que le socle fonctionne |
 
 ## Prérequis
 
