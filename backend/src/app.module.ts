@@ -11,6 +11,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
 import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { SyncModule } from './sync/sync.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AuthModule,
     AdminModule,
     BeneficiariesModule,
+    SyncModule,
   ],
   controllers: [HealthController],
   providers: [
