@@ -222,8 +222,15 @@ par-dessus une version de même numéro.
 | **Synchronisation** — les données restent sur les téléphones | 3.1 |
 | **Chiffrement de la base locale** — un téléphone perdu expose les dossiers | 3.3 |
 | Journal d'audit consultable | 3.4 |
-| Cadre réglementaire et localisation des données | 0.3 |
 
-⚠️ **Point juridique, pas technique** : héberger des données de santé
-malgaches sur un VPS situé hors du pays peut être interdit. À trancher avant
-de choisir l'hébergeur, pas après (ticket 0.3).
+Ces deux premiers points se tiennent ensemble et commandent la suite : tant que
+la synchronisation n'existe pas, chaque téléphone est le seul détenteur de ses
+dossiers ; et tant que la base locale n'est pas chiffrée, un téléphone perdu
+les expose. **Aucune donnée réelle de patient ne doit être saisie avant le
+ticket 3.3.**
+
+Le cadre réglementaire est couvert pour le pilote : le gouvernement malgache
+a donné son autorisation. Les réserves qui restent pour une généralisation
+sont détaillées dans [00-decisions-techniques.md](00-decisions-techniques.md),
+section D7 — notamment le fait que Cloudflare, en proxy devant les deux
+sous-domaines, déchiffre le trafic et voit les données de santé en clair.

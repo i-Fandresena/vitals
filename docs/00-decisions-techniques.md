@@ -103,14 +103,26 @@ la connexion.
 
 ## D7 — Cadre réglementaire
 
-⚠️ **Non tranché — ticket 0.3, prérequis juridique au déploiement, pas au
-développement.**
+**Le gouvernement malgache a autorisé la phase pilote** (septembre 2026,
+information transmise par l'équipe Maternal AI). Le déploiement sur un VPS
+hébergé hors du pays est donc couvert pour cette phase.
 
-À faire valider par un juriste ou un référent conformité, sans présumer du
-résultat : la loi malgache n°2014-038 sur la protection des données à caractère
-personnel et le rôle de la CMIL sont les points de départ à vérifier, ainsi que
-les règles de conservation, de consentement, d'export et de localisation des
-données de santé. Les conclusions alimenteront les tickets de la Phase 3.
+⚠️ **Cette autorisation porte sur le pilote, pas sur la généralisation.** Ce
+qui reste à cadrer avant une extension à plusieurs centres :
+
+- la portée exacte et la durée de l'autorisation obtenue ;
+- les règles de conservation, de consentement et d'export des données ;
+- si la production devra être rapatriée sur un hébergement national ;
+- le rôle de la CMIL et l'application de la loi n°2014-038 sur la protection
+  des données à caractère personnel.
+
+⚠️ **Cloudflare est en coupure du trafic.** Les deux sous-domaines passent par
+son proxy, qui termine le TLS : Cloudflare déchiffre donc les échanges entre
+les téléphones et le serveur, et voit les données de santé en clair. La
+liaison Cloudflare → VPS est bien chiffrée, mais cela ajoute un tiers dans la
+chaîne. À signaler au référent conformité, et à retirer si nécessaire — il
+suffit de désactiver le proxy (nuage gris) dans Cloudflare, Traefik ayant déjà
+ses propres certificats Let's Encrypt.
 
 ## D8 — Ce qui est délibérément absent
 

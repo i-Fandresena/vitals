@@ -47,6 +47,17 @@ android {
                 storePassword = keystoreProperties.getProperty("storePassword")
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
+
+                // v1 est l'ancienne signature JAR, inutile à partir d'Android 7
+                // (minSdk 24) et connue pour la faille Janus.
+                enableV1Signing = false
+                enableV2Signing = true
+
+                // v3 porte la rotation de clé. La clé de signature est
+                // irremplaçable : si elle fuit un jour, v3 est ce qui
+                // permettra d'en changer sans faire réinstaller l'application
+                // dans chaque centre. Cela ne coûte rien aujourd'hui.
+                enableV3Signing = true
             }
         }
     }
