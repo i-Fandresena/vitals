@@ -50,6 +50,16 @@ class HomeScreen extends ConsumerWidget {
     final user = auth.user;
     final can = ref.watch(permissionsProvider);
 
+    // Une synchronisation qui se termine a pu rapatrier des dossiers. Sans
+    // cette relecture, l'accueil continue d'afficher « aucun dossier » alors
+    // que la recherche, elle, les montre — de quoi faire croire que la
+    // synchronisation n'a rien ramené.
+    ref.listen<SyncState>(syncControllerProvider, (avant, apres) {
+      if (avant?.enCours == true && !apres.enCours) {
+        ref.invalidate(dossiersRecentsProvider);
+      }
+    });
+
     // Un profil sans accès aux dossiers individuels — l'administration
     // nationale — n'a rien à faire sur cet écran (CDC §5).
     if (!can.contains(Permission.beneficiaryViewIdentity)) {

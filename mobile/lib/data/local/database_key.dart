@@ -36,8 +36,8 @@ class DatabaseKey {
   /// Renvoie la clé, en la créant au premier appel.
   ///
   /// 32 octets tirés du générateur cryptographique du système, encodés en
-  /// hexadécimal : c'est la forme qu'attend `PRAGMA key` sous la notation
-  /// `x'...'`, qui évite toute dérivation supplémentaire.
+  /// hexadécimal : c'est la forme qu'attend `PRAGMA hexkey`, qui passe les
+  /// octets bruts sans dérivation supplémentaire.
   Future<String> obtenir() async {
     final existante = await _storage.read(key: _cle);
     if (existante != null && existante.length == 64) return existante;
@@ -71,12 +71,19 @@ class DatabaseKey {
   static bool estValide(String cle) =>
       cle.length == 64 && RegExp(r'^[0-9a-f]{64}$').hasMatch(cle);
 
-  /// Échappe la clé pour `PRAGMA key`.
+  /// Instruction complète qui pose la clé.
   ///
-  /// La notation `x'...'` passe les octets bruts, sans que SQLCipher n'applique
-  /// sa dérivation PBKDF2 : la clé étant déjà aléatoire sur 256 bits, la
-  /// dériver n'ajouterait rien et ralentirait chaque ouverture.
-  static String pragma(String cleHexa) => "x'$cleHexa'";
+  /// **`PRAGMA hexkey` et non `PRAGMA key = x'...'`.** La notation `x'...'` est
+  /// une extension de l'analyseur de SQLCipher ; la grammaire SQLite n'admet
+  /// après un `PRAGMA` qu'un nom, une chaîne ou un nombre, jamais un littéral
+  /// binaire. SQLite3 Multiple Ciphers, que cette application embarque, la
+  /// refuse donc avec « syntax error » — au moment précis de la première
+  /// écriture, c'est-à-dire à la première connexion.
+  ///
+  /// `hexkey` passe les mêmes octets bruts, sans dérivation PBKDF2 : la clé
+  /// étant déjà aléatoire sur 256 bits, la dériver n'ajouterait rien et
+  /// ralentirait chaque ouverture.
+  static String instructionCle(String cleHexa) => "PRAGMA hexkey = '$cleHexa';";
 
   /// Empreinte non réversible, pour les diagnostics.
   ///

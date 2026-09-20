@@ -143,15 +143,23 @@ Future<QueryExecutor> openAppDatabase({String name = 'vitals'}) async {
       // Isole la base des autres fichiers de l'application.
       databaseDirectory: getApplicationSupportDirectory,
       setup: (db) {
-        // `PRAGMA key` doit précéder toute autre instruction : SQLCipher lit
-        // l'en-tête du fichier au premier accès, et sans clé il le déclare
-        // corrompu.
-        db.execute('PRAGMA key = ${DatabaseKey.pragma(cle)};');
+        // L'ordre compte, et il est l'inverse de l'intuition.
+        //
+        // `PRAGMA cipher` doit venir EN PREMIER : SQLite3 Multiple Ciphers
+        // dérive la clé avec le chiffre sélectionné au moment où on la pose.
+        // Poser la clé d'abord la dérive avec le chiffre par défaut, et le
+        // `PRAGMA cipher` qui suit n'y change plus rien — la base s'ouvre,
+        // tout semble marcher, mais elle n'est pas au format annoncé.
+        //
+        // Ce n'est pas un détail cosmétique : corriger l'ordre après un
+        // déploiement rendrait illisibles les bases déjà créées sur les
+        // téléphones des centres.
+        db.execute('PRAGMA cipher = sqlcipher;');
 
         // Format SQLCipher 4, le plus répandu : une base produite ici reste
         // lisible par les outils standard, ce qui compte le jour où il faudra
         // expertiser un appareil ou récupérer des données.
-        db.execute('PRAGMA cipher = sqlcipher;');
+        db.execute(DatabaseKey.instructionCle(cle));
 
         // Vérifie immédiatement que la clé est la bonne. Sans cette lecture,
         // l'erreur ne surgirait qu'à la première requête métier, loin de sa

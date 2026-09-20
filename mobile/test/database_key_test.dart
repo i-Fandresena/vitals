@@ -25,22 +25,33 @@ void main() {
     });
   });
 
-  group('Échappement pour PRAGMA key', () {
-    test('utilise la notation binaire', () {
-      // `x'...'` passe les octets bruts. Sans elle, SQLCipher traiterait la
-      // clé comme une phrase de passe et y appliquerait PBKDF2 : inutile sur
-      // une valeur déjà aléatoire sur 256 bits, et coûteux à chaque ouverture.
-      expect(DatabaseKey.pragma('abc123'), "x'abc123'");
+  group('Instruction qui pose la clé', () {
+    test('utilise hexkey, pas la notation binaire de SQLCipher', () {
+      // Régression vécue sur un Pixel 4 : `PRAGMA key = x'...'` est une
+      // extension de l'analyseur de SQLCipher. La grammaire SQLite n'admet
+      // après un `PRAGMA` qu'un nom, une chaîne ou un nombre — jamais un
+      // littéral binaire. SQLite3 Multiple Ciphers, que l'application
+      // embarque, le refusait avec « syntax error » à la première écriture,
+      // c'est-à-dire au moment de la toute première connexion.
+      final instruction = DatabaseKey.instructionCle('abc123');
+
+      expect(instruction, "PRAGMA hexkey = 'abc123';");
+      expect(instruction.contains("x'"), isFalse);
+    });
+
+    test('passe les octets bruts, sans dérivation', () {
+      // La clé est déjà aléatoire sur 256 bits : lui appliquer PBKDF2
+      // n'ajouterait rien et ralentirait chaque ouverture.
+      final cle = 'f' * 64;
+      expect(DatabaseKey.instructionCle(cle), contains(cle));
     });
 
     test('ne laisse pas la clé s\'échapper de la chaîne', () {
       // La clé étant validée comme hexadécimale, elle ne peut pas contenir
       // d'apostrophe : la requête ne peut donc pas être détournée.
-      final cle = 'f' * 64;
-      final pragma = DatabaseKey.pragma(cle);
-      expect(pragma.startsWith("x'"), isTrue);
-      expect(pragma.endsWith("'"), isTrue);
-      expect(pragma.substring(2, pragma.length - 1), cle);
+      final cle = 'a1b2c3d4' * 8;
+      expect(DatabaseKey.estValide(cle), isTrue);
+      expect(DatabaseKey.instructionCle(cle).split("'").length, 3);
     });
   });
 
