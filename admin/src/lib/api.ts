@@ -106,6 +106,7 @@ export type UserRole =
   | 'AGENT_COMMUNAUTAIRE'
   | 'INFIRMIER'
   | 'SAGE_FEMME'
+  | 'MEDECIN'
   | 'RESPONSABLE_CSB'
   | 'ADMIN_NATIONAL';
 
@@ -299,6 +300,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   AGENT_COMMUNAUTAIRE: 'Agent communautaire',
   INFIRMIER: 'Infirmier',
   SAGE_FEMME: 'Sage-femme',
+  MEDECIN: 'Médecin',
   RESPONSABLE_CSB: 'Responsable du CSB',
   ADMIN_NATIONAL: 'Administration nationale',
 };

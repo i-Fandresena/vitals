@@ -10,6 +10,7 @@ enum UserRole {
   agentCommunautaire('AGENT_COMMUNAUTAIRE', 'Agent communautaire'),
   infirmier('INFIRMIER', 'Infirmier'),
   sageFemme('SAGE_FEMME', 'Sage-femme'),
+  medecin('MEDECIN', 'Médecin'),
   responsableCsb('RESPONSABLE_CSB', 'Responsable du CSB'),
   adminNational('ADMIN_NATIONAL', 'Administration');
 

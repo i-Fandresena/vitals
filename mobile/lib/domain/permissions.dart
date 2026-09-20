@@ -94,6 +94,23 @@ extension RolePermissions on UserRole {
       Permission.dashboardOwnActivity,
     },
 
+    // Le médecin d'un CSB II. Mêmes droits cliniques que la sage-femme : la
+    // distinction entre les deux est professionnelle et sert la traçabilité,
+    // elle ne correspond à aucune différence d'accès.
+    UserRole.medecin => const {
+      Permission.beneficiaryViewIdentity,
+      Permission.beneficiaryViewCareHistory,
+      Permission.beneficiaryCreate,
+      Permission.beneficiaryUpdateIdentity,
+      Permission.consultationRecord,
+      Permission.antenatalRecord,
+      Permission.postnatalRecord,
+      Permission.vaccinationRecord,
+      Permission.familyPlanningRecord,
+      Permission.communityDataRecord,
+      Permission.dashboardOwnActivity,
+    },
+
     UserRole.responsableCsb => const {
       Permission.beneficiaryViewIdentity,
       Permission.beneficiaryViewCareHistory,

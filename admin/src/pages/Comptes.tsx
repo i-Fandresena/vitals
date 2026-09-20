@@ -27,7 +27,12 @@ import {
  * refuse de toute façon — cette liste évite seulement de proposer
  * l'impossible.
  */
-const ROLES_CSB: UserRole[] = ['AGENT_COMMUNAUTAIRE', 'INFIRMIER', 'SAGE_FEMME'];
+const ROLES_CSB: UserRole[] = [
+  'AGENT_COMMUNAUTAIRE',
+  'INFIRMIER',
+  'SAGE_FEMME',
+  'MEDECIN',
+];
 const ROLES_ADMIN: UserRole[] = [...ROLES_CSB, 'RESPONSABLE_CSB', 'ADMIN_NATIONAL'];
 
 export function Comptes({ user }: { user: SessionUser }) {

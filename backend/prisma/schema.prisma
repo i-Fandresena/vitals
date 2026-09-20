@@ -21,6 +21,11 @@ enum UserRole {
   AGENT_COMMUNAUTAIRE
   INFIRMIER
   SAGE_FEMME
+  /// Présent dans les CSB II, absent des CSB I. Cliniquement le profil le plus
+  /// large ; distingué de la sage-femme pour la traçabilité et le reporting,
+  /// pas pour les droits — savoir qu'un acte a été posé par un médecin ou par
+  /// une sage-femme a un sens clinique.
+  MEDECIN
   RESPONSABLE_CSB
   ADMIN_NATIONAL
 }

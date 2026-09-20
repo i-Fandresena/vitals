@@ -248,6 +248,7 @@ export class AdminService {
       UserRole.AGENT_COMMUNAUTAIRE,
       UserRole.INFIRMIER,
       UserRole.SAGE_FEMME,
+      UserRole.MEDECIN,
     ];
 
     if (!assignable.includes(role)) {

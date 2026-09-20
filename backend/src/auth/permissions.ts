@@ -103,6 +103,23 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     Permission.DashboardOwnActivity,
   ],
 
+  // Le médecin d'un CSB II. Mêmes droits cliniques que la sage-femme : la
+  // distinction entre les deux est professionnelle et sert la traçabilité,
+  // elle ne correspond à aucune différence d'accès.
+  [UserRole.MEDECIN]: [
+    Permission.BeneficiaryViewIdentity,
+    Permission.BeneficiaryViewCareHistory,
+    Permission.BeneficiaryCreate,
+    Permission.BeneficiaryUpdateIdentity,
+    Permission.ConsultationRecord,
+    Permission.AntenatalRecord,
+    Permission.PostnatalRecord,
+    Permission.VaccinationRecord,
+    Permission.FamilyPlanningRecord,
+    Permission.CommunityDataRecord,
+    Permission.DashboardOwnActivity,
+  ],
+
   [UserRole.RESPONSABLE_CSB]: [
     Permission.BeneficiaryViewIdentity,
     Permission.BeneficiaryViewCareHistory,
