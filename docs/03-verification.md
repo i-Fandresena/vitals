@@ -367,30 +367,107 @@ Se déconnecter, se reconnecter avec un **autre** compte du même centre.
 soignant hériterait du curseur du premier et manquerait tout ce qui a changé
 avant son arrivée.
 
+## 9 — Saisie des soins (tickets 2.3 à 2.6)
+
+Ouvrir un dossier depuis la recherche, puis utiliser les actions de la fiche.
+
+### 9.1 Une consultation se saisit hors ligne
+
+Couper le réseau. Ouvrir un dossier, « Consultation », renseigner un motif et
+une température, enregistrer.
+
+✅ La consultation apparaît immédiatement dans l'historique de la fiche.
+✅ Le compteur « en attente » de l'accueil augmente de 1.
+
+### 9.2 Le carnet de vaccination montre le retard avant de saisir
+
+Ouvrir « Vaccination » sur un enfant déjà vacciné.
+
+✅ Les antigènes déjà administrés sont listés en haut, avec leurs doses.
+✅ Choisir un antigène propose **la dose suivante**, pas la dose 1.
+✅ Choisir une dose supérieure affiche un avertissement sur les doses
+manquantes, sans empêcher la saisie — un rattrapage est légitime.
+
+### 9.3 **Une même vaccination ne s'enregistre pas deux fois**
+
+Enregistrer BCG dose 1 aujourd'hui. Recommencer à l'identique.
+
+✅ Un message explique que cette dose est déjà enregistrée ce jour-là. Ce
+n'est pas une erreur technique : c'est le doublon le plus probable en pratique,
+deux soignants sur le même enfant.
+
+### 9.4 Une CPN s'attache à la grossesse en cours
+
+Ouvrir « Suivi de grossesse » sur une femme sans grossesse ouverte.
+
+✅ Le formulaire propose d'abord d'ouvrir la grossesse (dernières règles,
+gestité, parité), puis enchaîne sur la première CPN.
+✅ Sur une femme déjà suivie, il enchaîne directement sur la CPN suivante,
+numérotée.
+
+### 9.5 L'historique mélange les familles dans l'ordre du temps
+
+✅ Consultations, vaccinations, CPN et PF apparaissent dans une seule frise,
+la plus récente en haut, chacune avec son libellé — pas quatre listes
+séparées, qui obligeraient à comparer des dates de tête.
+
+## 10 — Synchronisation des soins
+
+### 10.1 Les actes saisis hors ligne partent au réseau retrouvé
+
+Après le §9, rétablir le réseau et synchroniser depuis l'accueil.
+
+✅ Le compteur « en attente » retombe à zéro.
+✅ Aucun enregistrement « refusé ».
+✅ Les actes apparaissent dans les indicateurs de l'espace admin, comptés à la
+**date de l'acte** et non à celle de la synchronisation.
+
+### 10.2 Un renvoi ne crée pas de doublon
+
+Depuis un poste, avec un compte soignant :
+
+```bash
+# Rejouer deux fois la même mutation
+curl -s -X POST https://api-vitals.aura-plus.site/api/v1/sync/push   -H "Authorization: Bearer $JETON" -H 'Content-Type: application/json'   -d '{"mutations":[{ … même charge utile … }]}'
+```
+
+✅ Premier envoi : `"statut":"accepte"`.
+✅ Second envoi : `"statut":"ignore"`, motif « Déjà enregistré ». L'identifiant
+venant de l'appareil, le renvoi retombe sur la même ligne.
+
+### 10.3 Un code inconnu est refusé, pas ramené à une valeur par défaut
+
+Envoyer une consultation dont le `type` n'existe pas.
+
+✅ `"statut":"rejete"`. Écrire « AUTRE » à la place fausserait silencieusement
+les indicateurs, ce qui est pire qu'un refus visible.
+
+### 10.4 Un acte dont le dossier manque reste en file
+
+✅ `"statut":"ignore"` avec le motif « Dossier pas encore reçu ». Ce n'est pas
+un refus : l'appareil doit le garder et réessayer, sinon la saisie est perdue.
+
+### 10.5 Une grossesse close se met bien à jour
+
+Enregistrer l'issue d'une grossesse déjà synchronisée, puis synchroniser.
+
+✅ L'issue est à jour côté serveur. Contrairement aux actes, une grossesse
+n'est pas figée à sa création : elle est ouverte à la première CPN puis close
+par l'accouchement.
+
 ## Ce qui ne peut pas encore être testé
 
 Ces fonctions ne sont pas développées ; leur absence n'est pas un défaut.
 
 | Fonction | Ticket |
 |---|---|
-| Historique des soins dans la fiche | 2.3 |
-| Consultations, grossesse, vaccination, PF | 2.4 à 2.7 |
+| Planification familiale, saisie dans l'application | 2.7 |
 | Tableau de bord du CSB dans l'application | 2.8 |
-| Chiffrement de la base locale | 3.3 |
-
-⚠️ La synchronisation **envoie** les dossiers mais pas encore les événements
-de soin : ils n'ont pas de saisie dans l'application (tickets 2.4 à 2.7). Le
-serveur les refuse explicitement, avec un message qui le dit — l'appareil sait
-ainsi que ce n'est pas une panne réseau et cesse de réessayer. Le
-**téléchargement**, lui, ramène déjà tout.
-
-⚠️ **La base locale n'est toujours pas chiffrée** (ticket 3.3). Un téléphone
-perdu expose les dossiers qu'il contient. Tests avec des noms fictifs
-uniquement.
+| Remontée DHIS2 | reporté |
 
 ## Que faire si un test échoue
 
 Noter le numéro du test, ce qui était attendu, ce qui s'est produit, et le
 message exact s'il y en a un. **Ne jamais joindre de capture contenant des
-données réelles de patient** — il ne devrait pas y en avoir à ce stade, la
-base n'étant pas encore chiffrée.
+données réelles de patient**, même depuis un appareil dont la base est
+chiffrée : une capture d'écran, elle, ne l'est pas.
