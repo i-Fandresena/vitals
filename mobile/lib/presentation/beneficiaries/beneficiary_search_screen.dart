@@ -6,6 +6,7 @@ import '../../core/routing/app_router.dart';
 import '../../core/theme/app_dimens.dart';
 import '../../domain/permissions.dart';
 import '../auth/permissions_provider.dart';
+import '../sync/sync_controller.dart';
 import 'beneficiary_search_controller.dart';
 import 'widgets/beneficiary_tile.dart';
 
@@ -36,6 +37,14 @@ class _BeneficiarySearchScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Une synchronisation qui se termine peut avoir ramené des dossiers : la
+    // liste affichée serait périmée sans cette relecture.
+    ref.listen<SyncState>(syncControllerProvider, (avant, apres) {
+      if (avant?.enCours == true && !apres.enCours) {
+        ref.read(beneficiarySearchProvider.notifier).refresh();
+      }
+    });
+
     final state = ref.watch(beneficiarySearchProvider);
     final theme = Theme.of(context);
     final canCreate = ref

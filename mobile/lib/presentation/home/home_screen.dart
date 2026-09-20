@@ -7,6 +7,7 @@ import '../../core/theme/app_dimens.dart';
 import '../../domain/permissions.dart';
 import '../auth/auth_controller.dart';
 import '../auth/permissions_provider.dart';
+import '../sync/sync_banner.dart';
 
 /// Accueil.
 ///
@@ -52,6 +53,7 @@ class HomeScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(AppDimens.screenPadding),
           children: [
+            const SyncBanner(),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(AppDimens.space16),

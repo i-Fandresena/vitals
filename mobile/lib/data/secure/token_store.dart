@@ -36,6 +36,8 @@ class TokenStore {
   static const _keyExpiry = 'auth.access_expires_at';
   static const _keyUserId = 'auth.user_id';
   static const _keyDeviceId = 'device.id';
+  static const _keySyncCursor = 'sync.cursor';
+  static const _keyLastSync = 'sync.last';
 
   Future<void> save(SessionTokens tokens, {required String userId}) async {
     await Future.wait([
@@ -77,6 +79,11 @@ class TokenStore {
       _storage.delete(key: _keyRefresh),
       _storage.delete(key: _keyExpiry),
       _storage.delete(key: _keyUserId),
+      // Le curseur part aussi : un autre soignant peut se connecter sur le
+      // même téléphone, et il ne doit pas hériter d'un curseur qui lui ferait
+      // sauter tout ce qui a changé avant son arrivée.
+      _storage.delete(key: _keySyncCursor),
+      _storage.delete(key: _keyLastSync),
     ]);
   }
 
@@ -85,4 +92,26 @@ class TokenStore {
 
   Future<void> saveDeviceId(String deviceId) =>
       _storage.write(key: _keyDeviceId, value: deviceId);
+
+  /// Curseur de synchronisation : l'horodatage serveur du dernier lot reçu.
+  ///
+  /// Rangé ici plutôt qu'en base parce qu'un re-téléchargement est sans
+  /// conséquence — les enregistrements s'écrivent par clé primaire — et qu'il
+  /// n'a donc pas besoin de partager la transaction des données.
+  ///
+  /// C'est l'heure du **serveur**, jamais celle de l'appareil : c'est elle qui
+  /// ordonne les changements, et l'horloge d'un téléphone peut dériver.
+  Future<String?> readSyncCursor() => _storage.read(key: _keySyncCursor);
+
+  Future<void> saveSyncCursor(String cursor) =>
+      _storage.write(key: _keySyncCursor, value: cursor);
+
+  /// Date de la dernière synchronisation réussie, pour l'affichage.
+  Future<DateTime?> readLastSync() async {
+    final brut = await _storage.read(key: _keyLastSync);
+    return brut == null ? null : DateTime.tryParse(brut);
+  }
+
+  Future<void> saveLastSync(DateTime quand) =>
+      _storage.write(key: _keyLastSync, value: quand.toIso8601String());
 }
