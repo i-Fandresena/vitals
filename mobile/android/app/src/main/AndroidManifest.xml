@@ -8,6 +8,20 @@
          d'éviter de tenter une synchronisation sans réseau. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
+    <!-- Scan du QR code d'un dossier. L'image ne quitte jamais l'appareil et
+         aucune photo n'est enregistrée : seul le contenu du code est lu. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+
+    <!-- Caméra déclarée non obligatoire : un appareil qui en est dépourvu doit
+         pouvoir installer l'application et chercher les dossiers par leur nom,
+         plutôt que d'être exclu du Play Store et des installations par APK. -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false"/>
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false"/>
+
     <application
         android:label="Vitals"
         android:name="${applicationName}"

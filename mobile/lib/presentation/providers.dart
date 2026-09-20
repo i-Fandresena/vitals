@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/local/app_database.dart';
 import '../data/remote/api_client.dart';
 import '../data/repositories/auth_repository.dart';
+import '../data/repositories/beneficiary_repository.dart';
 import '../data/secure/token_store.dart';
 
 /// Dépendances partagées de l'application.
@@ -22,5 +23,11 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     apiClient: ref.watch(apiClientProvider),
     tokenStore: ref.watch(tokenStoreProvider),
     database: ref.watch(databaseProvider),
+  );
+});
+
+final beneficiaryRepositoryProvider = Provider<BeneficiaryRepository>((ref) {
+  return BeneficiaryRepository(
+    beneficiaryDao: ref.watch(databaseProvider).beneficiaryDao,
   );
 });

@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../domain/enums/clinical_enums.dart';
 import '../../domain/enums/user_role.dart';
 import 'converters.dart';
+import 'daos/beneficiary_dao.dart';
 import 'tables/beneficiary_tables.dart';
 import 'tables/care_event_tables.dart';
 import 'tables/reference_tables.dart';
@@ -35,6 +36,7 @@ part 'app_database.g.dart';
     SyncQueueEntries,
     AuditEntries,
   ],
+  daos: [BeneficiaryDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);

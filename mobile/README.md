@@ -60,8 +60,9 @@ lib/
 ├── core/
 │   ├── config/            paramètres passés au build
 │   ├── errors/            exceptions présentables à l'utilisateur
+│   ├── routing/           routes et aiguillage selon la session
 │   ├── theme/             couleurs, dimensions, thème
-│   └── utils/             dates ISO
+│   └── utils/             dates ISO, identifiants et QR code
 ├── domain/
 │   ├── entities/          objets métier
 │   └── enums/             rôles et nomenclatures cliniques
@@ -72,6 +73,7 @@ lib/
 │   └── secure/            jetons dans le coffre du système
 └── presentation/
     ├── auth/              connexion
+    ├── beneficiaries/     recherche, création, fiche, scan
     ├── home/              accueil
     └── providers.dart     injection de dépendances (Riverpod)
 ```
@@ -92,6 +94,12 @@ silencieusement les indicateurs mensuels.
 se crée, ne se modifie jamais. Une correction annule et recrée. Conséquence
 utile : ces données ne peuvent pas entrer en conflit lors de la synchronisation.
 
+**Le QR code n'encode que l'UUID du dossier.** Voir
+[`core/utils/local_id.dart`](lib/core/utils/local_id.dart) — ni nom, ni date de
+naissance, ni donnée de santé. Une carte collée sur un carnet et perdue ne
+révèle rien ; elle n'est exploitable que depuis l'application, par quelqu'un
+d'authentifié.
+
 **L'interface vise la lisibilité en plein soleil, pas l'élégance.** Contrastes
 au-delà des minimums d'accessibilité, cibles tactiles de 56 à 60 dp, corps de
 texte à 16, aucune surface translucide. Le CDC §7 demande une interface « très
@@ -110,17 +118,19 @@ flutter build apk --debug
 
 ## État
 
-**Phase 1 livrée** — socle technique : base locale, API d'authentification,
-connexion et session persistante.
+**Phase 1 livrée** — socle technique : base locale, authentification, session.
+**Ticket 2.1 livré** — création et recherche de dossiers, identifiant lisible,
+QR code et scan.
 
 Limites connues à ce stade :
 
 - **Pas de chiffrement de la base locale** (ticket 3.3). Aucune donnée réelle de
   patient ne doit être saisie avant sa livraison.
-- **Pas de synchronisation** (ticket 3.1) : la file existe en base, rien ne la
-  vide encore.
-- **Aucun écran métier** : dossiers, consultations, vaccination, PF et tableau
-  de bord arrivent en Phase 2.
-- Pas de routeur : deux écrans suffisent pour l'instant, il sera introduit au
-  ticket 2.1.
+- **Pas de synchronisation** (ticket 3.1) : la file se remplit à chaque création,
+  mais rien ne la vide encore. Les dossiers restent sur l'appareil.
+- **Aucun droit différencié** (ticket 2.2) : tout profil connecté peut créer et
+  consulter les dossiers de son centre.
+- **La fiche dossier ne montre pas d'historique de soin** (ticket 2.3) — il n'y
+  a encore rien à y montrer.
+- Un dossier ne peut pas être modifié ni archivé depuis l'application.
 - Thème sombre défini mais désactivé, en attente des retours terrain.

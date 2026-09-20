@@ -1,27 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_dimens.dart';
-import '../../domain/entities/authenticated_user.dart';
 import '../auth/auth_controller.dart';
 
 /// Accueil.
 ///
-/// **Écran provisoire du ticket 1.4** : il confirme seulement que la session
-/// est ouverte et que le profil est correctement rétabli, y compris après
-/// fermeture de l'application.
-///
-/// Les actions réelles — rechercher un dossier, en créer un, enregistrer une
-/// consultation — arrivent en Phase 2. Elles seront placées ici par ordre de
-/// fréquence d'usage, pas par ordre logique : le CDC §7 demande que le
-/// professionnel comprenne immédiatement où chercher une personne.
+/// Les actions sont rangées par fréquence d'usage réelle, pas par ordre
+/// logique : sur une journée de CSB, on cherche un dossier existant bien plus
+/// souvent qu'on n'en crée un. « Rechercher » occupe donc la première place et
+/// la plus grande surface (CDC §7).
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key, required this.user});
-
-  final AuthenticatedUser user;
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authControllerProvider);
+    if (auth is! AuthSignedIn) return const SizedBox.shrink();
+
+    final user = auth.user;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -35,6 +34,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
+
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppDimens.screenPadding),
@@ -84,29 +84,40 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppDimens.space24),
 
-            Text('Prochaines étapes', style: theme.textTheme.titleLarge),
-            const SizedBox(height: AppDimens.space8),
-            Text(
-              'Le socle technique est en place : base locale, authentification '
-              'et session. Les fonctions métier arrivent en Phase 2.',
-              style: theme.textTheme.bodyLarge,
-            ),
-            const SizedBox(height: AppDimens.space16),
-
-            const _PlannedAction(
+            _PrimaryAction(
               icon: Icons.search,
-              label: 'Rechercher un dossier',
-              ticket: 'Ticket 2.1',
+              label: 'Rechercher une personne',
+              description: 'Par nom, identifiant ou QR code',
+              onTap: () => context.push(Routes.search),
             ),
-            const _PlannedAction(
-              icon: Icons.person_add_outlined,
+            const SizedBox(height: AppDimens.space12),
+
+            _SecondaryAction(
+              icon: Icons.person_add_alt_1,
               label: 'Nouveau dossier',
-              ticket: 'Ticket 2.1',
+              onTap: () => context.push(Routes.newBeneficiary),
             ),
+            const SizedBox(height: AppDimens.space12),
+
+            _SecondaryAction(
+              icon: Icons.qr_code_scanner,
+              label: 'Scanner une carte',
+              onTap: () => context.push(Routes.scan),
+            ),
+            const SizedBox(height: AppDimens.space32),
+
+            Text('Bientôt disponible', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppDimens.space8),
+
             const _PlannedAction(
               icon: Icons.assignment_outlined,
               label: 'Enregistrer une consultation',
               ticket: 'Ticket 2.4',
+            ),
+            const _PlannedAction(
+              icon: Icons.pregnant_woman_outlined,
+              label: 'Suivi de grossesse',
+              ticket: 'Ticket 2.5',
             ),
             const _PlannedAction(
               icon: Icons.vaccines_outlined,
@@ -130,7 +141,8 @@ class HomeScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Se déconnecter ?'),
         content: const Text(
-          'Vous devrez saisir à nouveau votre identifiant et votre mot de passe.',
+          'Vous devrez saisir à nouveau votre identifiant et votre mot de '
+          'passe. Les dossiers déjà enregistrés restent sur cet appareil.',
         ),
         actions: [
           TextButton(
@@ -151,12 +163,114 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
+/// Action principale — grande cible, contraste fort.
+class _PrimaryAction extends StatelessWidget {
+  const _PrimaryAction({
+    required this.icon,
+    required this.label,
+    required this.description,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String description;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: scheme.primary,
+      borderRadius: BorderRadius.circular(AppDimens.radiusLarge),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppDimens.radiusLarge),
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimens.space24),
+          child: Row(
+            children: [
+              Icon(icon, size: 36, color: scheme.onPrimary),
+              const SizedBox(width: AppDimens.space16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.titleLarge
+                          ?.copyWith(color: scheme.onPrimary),
+                    ),
+                    const SizedBox(height: AppDimens.space2),
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(color: scheme.onPrimary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryAction extends StatelessWidget {
+  const _SecondaryAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: scheme.surfaceContainer,
+      borderRadius: BorderRadius.circular(AppDimens.radiusMedium),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppDimens.radiusMedium),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: AppDimens.listRowHeight),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimens.space16,
+            vertical: AppDimens.space12,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 28, color: scheme.onSurface),
+              const SizedBox(width: AppDimens.space16),
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Action annoncée mais pas encore disponible.
 ///
 /// Volontairement visible et désactivée plutôt qu'absente : pendant les tests
 /// terrain, les utilisateurs doivent savoir ce que l'application fera, et
-/// l'équipe doit pouvoir vérifier que l'ordre des actions correspond à leur
-/// façon de travailler.
+/// l'équipe doit pouvoir vérifier que l'ordre correspond à leur façon de
+/// travailler.
 class _PlannedAction extends StatelessWidget {
   const _PlannedAction({
     required this.icon,
@@ -179,7 +293,7 @@ class _PlannedAction extends StatelessWidget {
         child: ListTile(
           leading: Icon(icon),
           title: Text(label),
-          subtitle: Text('Bientôt disponible · $ticket'),
+          subtitle: Text(ticket),
           enabled: false,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppDimens.radiusMedium),

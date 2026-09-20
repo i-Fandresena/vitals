@@ -1,7 +1,7 @@
-# Vérification manuelle de la Phase 1
+# Vérification manuelle
 
-Comment constater par soi-même que le socle technique fonctionne. Compter
-environ 20 minutes. Aucune donnée réelle de patient ne doit être utilisée : le
+Comment constater par soi-même que ce qui est livré fonctionne. Compter
+environ 30 minutes pour l'ensemble. Aucune donnée réelle de patient ne doit être utilisée : le
 chiffrement de la base locale n'est pas encore en place (ticket 3.3).
 
 ## Prérequis
@@ -155,17 +155,96 @@ cd mobile && flutter analyze && flutter test
 
 ✅ Aucun problème signalé dans les quatre cas.
 
+## 5 — Dossiers bénéficiaires (ticket 2.1)
+
+### 5.1 Créer un dossier hors ligne
+
+Mettre le téléphone **en mode avion**, puis : accueil → « Nouveau dossier ».
+
+Saisir un nom, un prénom, un sexe, une date de naissance.
+
+✅ Le dossier s'ouvre immédiatement, avec un identifiant `CSB-<code>-<AA>-00001`
+et un QR code. Aucune erreur réseau : la création ne dépend pas du serveur.
+
+### 5.2 L'identifiant progresse
+
+Créer un deuxième dossier, toujours hors ligne.
+
+✅ Il reçoit `…-00002`. Deux dossiers ne partagent jamais le même numéro.
+
+### 5.3 Âge estimé
+
+Créer un dossier en choisissant « Âge estimé » et en saisissant `45`.
+
+✅ La fiche affiche `~45 ans`. Le tilde signale une approximation, pour qu'elle
+ne soit jamais lue comme une date fiable.
+
+### 5.4 L'âge d'un nourrisson se lit en mois
+
+Créer un dossier avec une date de naissance d'il y a environ six mois.
+
+✅ La fiche affiche « 6 mois », pas « 0 ans ». C'est ce qui rend le calendrier
+vaccinal exploitable.
+
+### 5.5 Recherche par nom
+
+Accueil → « Rechercher une personne », taper les premières lettres d'un nom.
+
+✅ La liste se met à jour pendant la frappe. Un fragment au milieu du nom
+fonctionne aussi — les noms sont longs et souvent recopiés de mémoire.
+
+### 5.6 Recherche par identifiant
+
+Taper l'identifiant complet, en minuscules et avec des espaces au lieu des
+tirets : `csb 0142 26 00001`.
+
+✅ Le dossier correspondant est trouvé.
+
+### 5.7 Scan du QR code
+
+Ouvrir un dossier sur un premier appareil (ou l'imprimer), puis accueil →
+« Scanner une carte » et viser le code.
+
+✅ Le dossier s'ouvre directement.
+
+### 5.8 **Un QR code étranger est refusé proprement**
+
+Scanner n'importe quel autre QR code — un produit, une affiche, un lien.
+
+✅ Un message explique que le code ne correspond à aucun dossier. L'application
+n'ouvre rien et ne plante pas.
+
+### 5.9 Le QR code ne contient aucune donnée personnelle
+
+Lire le QR code d'un dossier avec **n'importe quelle autre application** de
+scan, sur le téléphone.
+
+✅ Le contenu lu est exactement `vitals:b/<uuid>` : pas de nom, pas de date de
+naissance, pas d'information de santé. C'est ce qui permet de coller le code
+sur un carnet remis à la personne sans risque en cas de perte.
+
+### 5.10 La recherche est cloisonnée au centre
+
+Si deux comptes de CSB différents sont disponibles : créer un dossier avec le
+premier, se déconnecter, se connecter avec le second, chercher ce dossier.
+
+✅ Il n'apparaît pas, et son QR code ne l'ouvre pas non plus.
+
 ## Ce qui ne peut pas encore être testé
 
 Ces fonctions ne sont pas développées ; leur absence n'est pas un défaut.
 
 | Fonction | Ticket |
 |---|---|
-| Créer et rechercher un dossier, QR code | 2.1 |
-| Consultations, vaccination, PF, CPN | 2.4 à 2.7 |
+| Droits différenciés par profil | 2.2 |
+| Historique des soins dans la fiche | 2.3 |
+| Consultations, grossesse, vaccination, PF | 2.4 à 2.7 |
 | Tableau de bord du CSB | 2.8 |
 | Synchronisation hors ligne | 3.1 |
 | Chiffrement de la base locale | 3.3 |
+
+⚠️ À ce stade, **tous les profils connectés peuvent créer et consulter les
+dossiers de leur centre**. La matrice des droits est le ticket 2.2.
 
 ## Que faire si un test échoue
 
