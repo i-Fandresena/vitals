@@ -31,14 +31,7 @@ export function Centres({ user }: { user: SessionUser }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">Centres de santé</h2>
-          <p className="text-on-surface-variant">
-            Le code du centre préfixe les identifiants de dossier et n'est plus
-            modifiable ensuite.
-          </p>
-        </div>
+      <div className="flex flex-wrap justify-end gap-3">
         {mayCreate && !creating && (
           <Button onClick={() => setCreating(true)}>Nouveau centre</Button>
         )}

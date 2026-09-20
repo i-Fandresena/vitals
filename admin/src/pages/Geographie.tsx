@@ -34,14 +34,7 @@ export function Geographie({ user }: { user: SessionUser }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">Découpage géographique</h2>
-          <p className="text-on-surface-variant">
-            Les codes sont figés après création : ils servent de clé de
-            rapprochement avec DHIS2 et les publications nationales.
-          </p>
-        </div>
+      <div className="flex flex-wrap justify-end gap-3">
         {national && !creation && (
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setCreation('region')}>

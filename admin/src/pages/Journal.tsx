@@ -52,13 +52,6 @@ export function Journal() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h2 className="text-2xl font-bold">Journal d'audit</h2>
-        <p className="text-on-surface-variant">
-          Qui a créé ou modifié quoi, et quand. En lecture seule : rien ne peut
-          y être effacé.
-        </p>
-      </div>
 
       {erreur && <Alert>{erreur}</Alert>}
 

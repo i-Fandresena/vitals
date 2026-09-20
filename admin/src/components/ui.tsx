@@ -88,8 +88,103 @@ export function Alert({
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-outline-variant bg-white p-5">
+    <div className="rounded-2xl border border-outline-variant bg-white p-5">
       {children}
+    </div>
+  );
+}
+
+/** Carte à en-tête : un titre, une explication, et de quoi régler la vue.
+ *
+ * Le sous-titre n'est pas décoratif. Sur des indicateurs, ce qui est compté et
+ * sur quelle date fait la différence entre un chiffre juste et un chiffre
+ * trompeur — et personne n'ira le chercher dans la documentation. */
+export function Panel({
+  titre,
+  sous,
+  action,
+  children,
+}: {
+  titre: string;
+  sous?: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-outline-variant bg-surface-card p-5">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold">{titre}</h3>
+          {sous && <p className="text-sm text-on-surface-variant">{sous}</p>}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/**
+ * Chiffre unique, avec son icône et sa part de l'ensemble.
+ *
+ * [enAvant] réserve le fond plein à une seule tuile de la grille : l'œil doit
+ * savoir où se poser en premier. Plusieurs cartes pleines et la hiérarchie
+ * disparaît.
+ */
+export function StatCard({
+  libelle,
+  valeur,
+  note,
+  part,
+  icone,
+  enAvant = false,
+}: {
+  libelle: string;
+  valeur: number;
+  note?: string;
+  /** Part du total de la période, en pourcentage. */
+  part?: number;
+  icone: ReactNode;
+  enAvant?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border p-5 ${
+        enAvant
+          ? 'border-primary bg-primary text-white'
+          : 'border-outline-variant bg-surface-card'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span
+          className={`grid size-11 place-items-center rounded-xl ${
+            enAvant ? 'bg-white/15 text-white' : 'bg-surface-container text-primary'
+          }`}
+        >
+          {icone}
+        </span>
+        {part !== undefined && (
+          <span
+            className={`rounded-full px-2.5 py-1 text-sm font-semibold tabular-nums ${
+              enAvant ? 'bg-white/15 text-white' : 'bg-surface-container text-on-surface'
+            }`}
+          >
+            {part.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} %
+          </span>
+        )}
+      </div>
+
+      <p className={`mt-4 text-sm font-medium ${enAvant ? 'text-white/80' : 'text-on-surface-variant'}`}>
+        {libelle}
+      </p>
+      <p className="text-3xl font-bold tabular-nums">
+        {valeur.toLocaleString('fr-FR')}
+      </p>
+      {note && (
+        <p className={`mt-1 text-xs ${enAvant ? 'text-white/70' : 'text-on-surface-variant'}`}>
+          {note}
+        </p>
+      )}
     </div>
   );
 }

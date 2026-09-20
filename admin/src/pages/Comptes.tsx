@@ -76,14 +76,7 @@ export function Comptes({ user }: { user: SessionUser }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">Comptes</h2>
-          <p className="text-on-surface-variant">
-            Les soignants se connectent avec ces comptes depuis l'application
-            mobile.
-          </p>
-        </div>
+      <div className="flex flex-wrap justify-end gap-3">
         {!creating && (
           <Button onClick={() => setCreating(true)}>Nouveau compte</Button>
         )}
