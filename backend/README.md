@@ -180,8 +180,6 @@ prisma/
 
 - **Aucun endpoint métier** : dossiers, consultations et synchronisation
   arrivent en Phase 2 et 3.
-- **Pas de migration committée** pour l'instant : `prisma migrate dev` la génère
-  au premier lancement, ce qui laisse le développeur choisir son nom.
 - **Les jetons de refresh expirés ne sont pas purgés** — une tâche de nettoyage
   sera nécessaire avant le pilote.
 - Les listes d'antigènes PEV, de méthodes de PF et de codes de motifs sont des
