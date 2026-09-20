@@ -26,37 +26,44 @@ Deux enregistrements `A` vers l'IP du VPS :
 | `api-vitals.aura-plus.site` | A | IP du VPS |
 | `vitals.aura-plus.site` | A | IP du VPS |
 
-Attendre la propagation avant l'étape 3 : Caddy demande les certificats au
-premier démarrage et Let's Encrypt doit pouvoir résoudre les deux noms.
+⚠️ **Ce point est le seul qui manque aujourd'hui.** `aura-plus.site` pointe
+vers Vercel (216.198.79.65), pas vers le VPS. Tant que les deux sous-domaines
+ne résolvent pas vers 72.60.76.85, Let's Encrypt ne peut pas délivrer de
+certificat et les deux adresses restent injoignables depuis l'extérieur — alors
+que tout tourne déjà sur le serveur.
 
 ```bash
 dig +short api-vitals.aura-plus.site
 ```
 
-## 2 — Préparer le VPS
+## 2 — Le serveur
 
-Debian 12 ou Ubuntu 24.04, 2 Go de RAM au minimum.
+Vitals tourne sur **`qualitec-vps`** (72.60.76.85), déjà en service.
 
-```bash
-# Docker
-curl -fsSL https://get.docker.com | sh
+⚠️ **Ce serveur héberge Coolify et une dizaine d'autres applications.** Son
+proxy Traefik (`coolify-proxy`) détient les ports 80 et 443. Vitals ne les
+publie donc pas : il s'attache au réseau `coolify` et se déclare auprès de
+Traefik par des étiquettes, exactement comme les autres applications.
 
-# Pare-feu : seuls 22, 80 et 443 sont ouverts.
-ufw allow 22/tcp && ufw allow 80/tcp && ufw allow 443/tcp && ufw enable
-```
+Publier 80 ou 443 depuis Vitals casserait tous les autres sites du serveur.
+C'est la raison pour laquelle il n'y a ni nginx ni Caddy dans
+`deploy/docker-compose.yml`.
 
-**PostgreSQL ne doit jamais être exposé.** Le `docker-compose.yml` ne publie
-aucun port pour la base : elle n'est joignable que depuis le réseau interne de
-Docker. Des données de santé accessibles depuis l'internet public, même
-derrière un mot de passe, sont un risque qu'aucun mot de passe ne compense.
+**PostgreSQL n'est exposé nulle part.** Il vit sur un réseau Docker séparé :
+ni l'internet, ni les autres applications du serveur ne peuvent l'atteindre.
+Des données de santé accessibles publiquement sont un risque qu'aucun mot de
+passe ne compense.
 
 ## 3 — Déployer
 
-```bash
-git clone https://github.com/i-Fandresena/vitals.git
-cd vitals/deploy
+Le dépôt est déployé dans `/opt/vitals` :
 
-cp .env.example .env
+```bash
+ssh qualitec-vps
+cd /opt/vitals && git pull
+
+cd deploy
+cp .env.example .env     # au premier déploiement seulement
 ```
 
 Renseigner `.env` :
@@ -174,10 +181,10 @@ complète.
 # Sauvegarde quotidienne à 2 h, conservée 30 jours
 cat > /etc/cron.daily/vitals-backup <<'SCRIPT'
 #!/bin/sh
-cd /root/vitals/deploy || exit 1
-FICHIER="/root/vitals/deploy/backups/vitals-$(date +%F).sql.gz"
+cd /opt/vitals/deploy || exit 1
+FICHIER="/opt/vitals/deploy/backups/vitals-$(date +%F).sql.gz"
 docker compose exec -T db pg_dump -U vitals vitals | gzip > "$FICHIER"
-find /root/vitals/deploy/backups -name 'vitals-*.sql.gz' -mtime +30 -delete
+find /opt/vitals/deploy/backups -name 'vitals-*.sql.gz' -mtime +30 -delete
 SCRIPT
 chmod +x /etc/cron.daily/vitals-backup
 ```
@@ -193,10 +200,15 @@ transfert et ne se dépose pas sur un stockage grand public.
 ## 6 — Mise à jour
 
 ```bash
-cd /root/vitals && git pull
+ssh qualitec-vps
+cd /opt/vitals && git pull
 cd deploy && docker compose up -d --build
 docker compose exec api npx prisma migrate deploy
 ```
+
+⚠️ **Reconstruire avant de migrer.** Les migrations sont copiées dans l'image :
+lancer `migrate deploy` sans avoir reconstruit applique celles de l'ancienne
+image, et répond « No pending migrations » sans rien faire.
 
 L'APK se met à jour séparément : les téléphones ne se mettent pas à jour tout
 seuls, il faut redistribuer le fichier. Incrémenter `version` dans
