@@ -24,16 +24,22 @@ abstract final class AppTheme {
       onPrimary: AppColors.onPrimary,
       primaryContainer: AppColors.primaryContainer,
       onPrimaryContainer: AppColors.onPrimaryContainer,
-      secondary: AppColors.secondary,
-      onSecondary: AppColors.onSecondary,
-      secondaryContainer: AppColors.secondaryContainer,
-      onSecondaryContainer: AppColors.onSecondaryContainer,
+      // Le corail de marque sert de couleur secondaire, mais uniquement dans
+      // sa variante utilisable sous du texte : le corail pur ne porte jamais
+      // de libellé (voir AppColors).
+      secondary: AppColors.accentAction,
+      onSecondary: AppColors.onAccentAction,
+      secondaryContainer: AppColors.accentContainer,
+      onSecondaryContainer: AppColors.onAccentContainer,
+      tertiary: AppColors.accent,
+      onTertiary: AppColors.onSurface,
       error: AppColors.error,
       onError: AppColors.onError,
       errorContainer: AppColors.errorContainer,
       onErrorContainer: AppColors.onErrorContainer,
       surface: AppColors.surface,
       onSurface: AppColors.onSurface,
+      surfaceContainerLowest: AppColors.surfaceCard,
       surfaceContainer: AppColors.surfaceContainer,
       surfaceContainerHigh: AppColors.surfaceContainerHigh,
       onSurfaceVariant: AppColors.onSurfaceVariant,
@@ -49,23 +55,26 @@ abstract final class AppTheme {
       brightness: Brightness.dark,
       primary: AppColors.darkPrimary,
       onPrimary: AppColors.darkOnPrimary,
-      primaryContainer: Color(0xFF005145),
+      primaryContainer: Color(0xFF17405F),
       onPrimaryContainer: AppColors.primaryContainer,
-      secondary: Color(0xFFB4CCC4),
-      onSecondary: Color(0xFF1F352F),
-      secondaryContainer: Color(0xFF354B45),
-      onSecondaryContainer: Color(0xFFD0E8E0),
-      error: Color(0xFFFFB4AB),
-      onError: Color(0xFF690005),
-      errorContainer: Color(0xFF93000A),
+      secondary: Color(0xFFFFB4AE),
+      onSecondary: Color(0xFF5C1713),
+      secondaryContainer: Color(0xFF7A2822),
+      onSecondaryContainer: Color(0xFFFFDAD6),
+      tertiary: AppColors.accent,
+      onTertiary: Color(0xFF3B0D0B),
+      error: Color(0xFFFFB4AE),
+      onError: Color(0xFF5C1713),
+      errorContainer: Color(0xFF7A2822),
       onErrorContainer: Color(0xFFFFDAD6),
       surface: AppColors.darkSurface,
       onSurface: AppColors.darkOnSurface,
+      surfaceContainerLowest: AppColors.darkSurfaceCard,
       surfaceContainer: AppColors.darkSurfaceContainer,
-      surfaceContainerHigh: Color(0xFF242E2A),
+      surfaceContainerHigh: Color(0xFF243243),
       onSurfaceVariant: AppColors.darkOnSurfaceVariant,
       outline: AppColors.darkOutline,
-      outlineVariant: Color(0xFF3C4A46),
+      outlineVariant: Color(0xFF3A4B5E),
     );
 
     return _base(scheme);
@@ -95,7 +104,9 @@ abstract final class AppTheme {
       // « soulignés » ou sans contour obligent à chercher où écrire.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surface,
+        // Champ blanc sur fond cassé : la zone de saisie se distingue sans
+        // avoir besoin d'une ombre.
+        fillColor: scheme.surfaceContainerLowest,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppDimens.space16,
           vertical: AppDimens.space16,
@@ -156,7 +167,9 @@ abstract final class AppTheme {
       ),
 
       cardTheme: CardThemeData(
-        color: scheme.surfaceContainer,
+        // Blanc sur fond cassé : la carte doit ressortir EN CLAIR du fond,
+        // sinon la hiérarchie s'inverse et tout paraît enfoncé.
+        color: scheme.surfaceContainerLowest,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(

@@ -5,27 +5,47 @@
    des minimums d'accessibilité : l'espace admin s'utilise aussi sur des écrans
    médiocres, dans des bureaux mal éclairés. */
 @theme {
-  --color-primary: #0b6b5e;
-  --color-primary-hover: #095950;
-  --color-primary-container: #b8efe3;
-  --color-on-primary-container: #00201b;
+  /* Bleu Médical — barre de navigation, titres, boutons principaux.
+     8,66:1 avec du blanc. */
+  --color-primary: #1a4f76;
+  --color-primary-hover: #123a57;
+  --color-primary-container: #d4e4f2;
+  --color-on-primary-container: #0a2740;
 
-  --color-surface: #fafcfb;
-  --color-surface-container: #eff3f1;
-  --color-on-surface: #12100e;
-  --color-on-surface-variant: #3c4a46;
-  --color-outline: #6b7a75;
-  --color-outline-variant: #c3ceca;
+  /* Rouge Corail de marque. NE PORTE JAMAIS DE TEXTE : mesuré, il donne
+     3,00:1 avec du blanc là où il en faut 4,5. Réservé aux pastilles, points
+     de notification et traits d'accent. */
+  --color-accent: #ff5e5b;
+  /* Corail assombri juste ce qu'il faut pour porter du texte blanc (4,53:1).
+     Au-delà il vire au rouge pur et perd le caractère de la marque. */
+  --color-accent-action: #cc4a45;
+  --color-accent-container: #f9e7e9;
+  --color-on-accent-container: #4a1512;
 
-  --color-danger: #b3261e;
-  --color-danger-container: #f9dedc;
-  --color-on-danger-container: #410e0b;
+  /* Blanc Cassé — évite la fatigue visuelle d'un blanc pur. */
+  --color-surface: #f8fafc;
+  /* Les cartes ressortent EN CLAIR du fond, sinon la hiérarchie s'inverse. */
+  --color-surface-card: #ffffff;
+  --color-surface-container: #eef2f6;
 
-  --color-success: #1b6b3a;
-  --color-success-container: #cdefd9;
+  /* Gris Ardoise — 9,90:1 sur le fond. */
+  --color-on-surface: #334155;
+  --color-on-surface-variant: #5a6b80;
 
-  --color-warning: #8a5300;
-  --color-warning-container: #ffeac8;
+  /* 3,86:1 : les composants d'interface demandent 3:1, une bordure plus pâle
+     disparaîtrait sur un écran médiocre. */
+  --color-outline: #708093;
+  --color-outline-variant: #c3cedb;
+
+  --color-danger: #cc4a45;
+  --color-danger-container: #f9e7e9;
+  --color-on-danger-container: #4a1512;
+
+  --color-success: #0f7a4d;
+  --color-success-container: #d6f1e3;
+
+  --color-warning: #9a6300;
+  --color-warning-container: #fdefd3;
 }
 
 html {
