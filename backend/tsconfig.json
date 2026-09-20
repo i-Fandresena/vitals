@@ -22,8 +22,13 @@
     "resolveJsonModule": true,
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    // Racine explicite. Sans elle, TypeScript la deduit du plus petit dossier
+    // commun aux fichiers inclus : ajouter prisma/ a `include` la remontait a
+    // la racine du projet et la sortie devenait dist/src/main.js, que le
+    // conteneur de production ne trouvait pas.
+    "rootDir": "./src"
   },
-  "include": ["src/**/*", "prisma/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
