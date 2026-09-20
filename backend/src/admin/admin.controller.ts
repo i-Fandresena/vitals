@@ -33,19 +33,7 @@ import {
 export class AdminController {
   constructor(private readonly admin: AdminService) {}
 
-  // --- Découpage géographique, pour les formulaires ---
-
-  @Get('regions')
-  @RequirePermissions(Permission.ManageCsbUsers)
-  listRegions() {
-    return this.admin.listRegions();
-  }
-
-  @Get('districts')
-  @RequirePermissions(Permission.ManageCsbUsers)
-  listDistricts(@Query('regionId') regionId?: string) {
-    return this.admin.listDistricts(regionId);
-  }
+  // Le découpage géographique est servi par GeographyController.
 
   // --- Centres ---
 

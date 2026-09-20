@@ -37,25 +37,6 @@ export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ---------------------------------------------------------------------
-  // Découpage géographique
-  // ---------------------------------------------------------------------
-
-  listRegions() {
-    return this.prisma.region.findMany({
-      orderBy: { name: 'asc' },
-      select: { id: true, code: true, name: true },
-    });
-  }
-
-  listDistricts(regionId?: string) {
-    return this.prisma.district.findMany({
-      where: regionId ? { regionId } : undefined,
-      orderBy: { name: 'asc' },
-      select: { id: true, code: true, name: true, regionId: true },
-    });
-  }
-
-  // ---------------------------------------------------------------------
   // Centres de santé
   // ---------------------------------------------------------------------
 

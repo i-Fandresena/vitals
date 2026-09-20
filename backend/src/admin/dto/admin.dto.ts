@@ -57,14 +57,17 @@ export class UpdateCsbDto {
 
 export class CreateUserDto {
   /**
-   * Identifiant de connexion. Pas d'adresse e-mail : le personnel des CSB
-   * n'en a pas systématiquement.
+   * Identifiant de connexion.
+   *
+   * Une adresse e-mail est acceptée mais n'est pas imposée : beaucoup de
+   * personnels de CSB n'en ont pas, et leur en exiger une bloquerait la
+   * création de leur compte. Un matricule ou un nom d'usage convient.
    */
   @IsString()
-  @Matches(/^[a-z0-9._-]{3,64}$/, {
+  @Matches(/^[a-z0-9._@+-]{3,120}$/, {
     message:
-      "L'identifiant ne contient que des minuscules, chiffres, point, tiret " +
-      'ou souligné, et fait au moins 3 caractères',
+      "L'identifiant ne contient que des minuscules, chiffres, point, tiret, " +
+      'souligné, plus ou arobase, et fait au moins 3 caractères',
   })
   username!: string;
 
