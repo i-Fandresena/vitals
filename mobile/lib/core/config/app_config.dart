@@ -16,8 +16,21 @@ abstract final class AppConfig {
   /// ```
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:3000/api/v1',
+    defaultValue: _adresseEmulateur,
   );
+
+  static const String _adresseEmulateur = 'http://10.0.2.2:3000/api/v1';
+
+  /// Vrai quand l'APK a été construit sans `--dart-define=API_BASE_URL`.
+  ///
+  /// Sur un vrai téléphone, l'adresse par défaut ne mène nulle part : chaque
+  /// requête attend la fin du délai de connexion, puis échoue sur « le serveur
+  /// met trop de temps à répondre ». Le symptôme désigne le réseau alors que
+  /// la cause est le build, et on cherche du mauvais côté pendant longtemps.
+  ///
+  /// L'application le dit donc au démarrage plutôt que de laisser découvrir la
+  /// panne au premier essai de connexion.
+  static bool get adresseManquante => apiBaseUrl == _adresseEmulateur;
 
   /// Délais réseau volontairement longs : sur une connexion 2G de brousse, une
   /// requête peut mettre plusieurs dizaines de secondes à aboutir. Abandonner

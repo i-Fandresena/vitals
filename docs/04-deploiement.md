@@ -171,6 +171,21 @@ dans `android/key.properties` : il doit être absolu.
 `keytool -printcert -jarfile` ne convient pas ici — il ne lit que l'ancienne
 signature JAR et répond « fichier non signé » sur un APK moderne.
 
+**Vérifier aussi l'adresse compilée.** Un `--dart-define` oublié ne casse rien
+à la construction : l'APK se signe, s'installe et démarre. La panne
+n'apparaît qu'à la première connexion, après trente secondes d'attente, sur
+un message qui accuse le réseau.
+
+```bash
+unzip -p app-armeabi-v7a-release.apk lib/*/libapp.so | strings | grep -c 10.0.2.2
+```
+
+Attendu : `0`. Si le compte est supérieur à zéro, l'APK vise l'émulateur.
+
+L'application s'en protège aussi d'elle-même : un build de release sans
+adresse affiche au démarrage un écran qui le dit, au lieu de laisser
+découvrir la panne au premier essai de connexion.
+
 ## 5 — Sauvegardes
 
 Sans sauvegarde, une panne du VPS détruit les données de tous les centres. Les
