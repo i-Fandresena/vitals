@@ -82,6 +82,11 @@ services:
       args:
         VITE_API_BASE_URL: https://${API_DOMAIN}/api/v1
     restart: unless-stopped
+    volumes:
+      # APK mis à disposition des centres. Déposés à la main après chaque
+      # build signé, pas construits ici : la signature exige le keystore, qui
+      # ne doit jamais se trouver sur le serveur.
+      - ./telechargements:/usr/share/nginx/html/telechargement:ro
     networks:
       - coolify
     labels:
