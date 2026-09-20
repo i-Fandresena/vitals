@@ -18,6 +18,10 @@ abstract final class AppDimens {
   static const double space32 = 32;
   static const double space48 = 48;
 
+  /// Dégagement sous une liste que la barre de navigation flottante recouvre.
+  /// Sans lui, la dernière ligne reste inatteignable sous la barre.
+  static const double bottomBarClearance = 96;
+
   /// Marge latérale des écrans.
   static const double screenPadding = space16;
 

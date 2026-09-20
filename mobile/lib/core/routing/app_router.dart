@@ -16,6 +16,7 @@ import '../../presentation/care/vaccination_form_screen.dart';
 import '../../presentation/home/home_screen.dart';
 import '../../presentation/home/profil_screen.dart';
 import '../../presentation/home/splash_screen.dart';
+import '../../presentation/shell/app_shell.dart';
 
 /// Chemins de l'application, nommés en français comme le reste du code.
 abstract final class Routes {
@@ -123,13 +124,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: Routes.login,
         builder: (context, state) => const LoginScreen(),
       ),
-      GoRoute(
-        path: Routes.home,
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: Routes.search,
-        builder: (context, state) => const BeneficiarySearchScreen(),
+      // Les deux écrans où l'on passe l'essentiel de la journée partagent la
+      // barre de navigation. Un `ShellRoute` la construit une fois : elle ne
+      // clignote donc pas au passage de l'un à l'autre.
+      ShellRoute(
+        builder: (context, state, child) => AppShell(
+          onglet: state.matchedLocation == Routes.search
+              ? ShellTab.recherche
+              : ShellTab.accueil,
+          child: child,
+        ),
+        routes: [
+          GoRoute(
+            path: Routes.home,
+            builder: (context, state) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: Routes.search,
+            builder: (context, state) => const BeneficiarySearchScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: Routes.newBeneficiary,
