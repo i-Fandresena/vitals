@@ -113,12 +113,19 @@ async function main() {
   const medecinOuSf = [...parRole('MEDECIN'), ...parRole('SAGE_FEMME'), ...soignants];
   const sageFemmes = [...parRole('SAGE_FEMME'), ...parRole('MEDECIN'), ...soignants];
 
-  let sequence = csb.lastLocalSequenceYear === new Date().getFullYear()
-    ? csb.lastLocalSequence
-    : 0;
+  // Le compteur de séquence vit dans la base locale de chaque appareil, pas
+  // sur le serveur : celui-ci ne fait que recevoir l'identifiant déjà attribué.
+  // On repart donc du plus grand numéro réellement présent pour l'année.
+  const annee = String(new Date().getFullYear() % 100).padStart(2, '0');
+  const prefixe = `CSB-${csb.code}-${annee}-`;
+  const dernier = await prisma.beneficiary.findFirst({
+    where: { csbId: csb.id, localId: { startsWith: prefixe } },
+    orderBy: { localId: 'desc' },
+    select: { localId: true },
+  });
+  let sequence = dernier ? Number(dernier.localId.slice(-5)) : 0;
 
   const stats = { dossiers: 0, consultations: 0, cpn: 0, vaccinations: 0, pf: 0 };
-  const annee = String(new Date().getFullYear() % 100).padStart(2, '0');
 
   // 24 dossiers : assez pour remplir une liste, un graphique et une
   // répartition sans rendre la base illisible.
@@ -140,7 +147,7 @@ async function main() {
     await prisma.beneficiary.create({
       data: {
         id,
-        localId: `CSB-${csb.code}-${annee}-${String(sequence).padStart(5, '0')}`,
+        localId: `${prefixe}${String(sequence).padStart(5, '0')}`,
         firstName: femme ? choisir(PRENOMS_F) : choisir(PRENOMS_M),
         lastName: choisir(NOMS),
         sex: sexe,
@@ -278,14 +285,6 @@ async function main() {
       }
     }
   }
-
-  await prisma.csb.update({
-    where: { id: csb.id },
-    data: {
-      lastLocalSequence: sequence,
-      lastLocalSequenceYear: new Date().getFullYear(),
-    },
-  });
 
   console.log('Jeu de démonstration créé :');
   console.log(`  ${stats.dossiers} dossiers`);
