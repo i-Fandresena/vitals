@@ -9,7 +9,9 @@ import '../../core/utils/iso_date.dart';
 import '../../core/utils/local_id.dart';
 import '../../data/local/app_database.dart';
 import '../../domain/entities/beneficiary_display.dart';
+import '../../domain/permissions.dart';
 import '../auth/auth_controller.dart';
+import '../auth/permissions_provider.dart';
 import '../providers.dart';
 
 /// Charge un dossier depuis la base locale.
@@ -39,6 +41,9 @@ class BeneficiaryDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(beneficiaryProvider(beneficiaryId));
+    final canSeeCareHistory = ref
+        .watch(permissionsProvider)
+        .contains(Permission.beneficiaryViewCareHistory);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Dossier')),
@@ -56,7 +61,10 @@ class BeneficiaryDetailScreen extends ConsumerWidget {
                       'Il appartient peut-être à un autre CSB.',
                   icon: Icons.folder_off_outlined,
                 )
-              : _Content(beneficiary: beneficiary),
+              : _Content(
+                  beneficiary: beneficiary,
+                  canSeeCareHistory: canSeeCareHistory,
+                ),
         ),
       ),
     );
@@ -64,9 +72,13 @@ class BeneficiaryDetailScreen extends ConsumerWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.beneficiary});
+  const _Content({required this.beneficiary, required this.canSeeCareHistory});
 
   final Beneficiary beneficiary;
+
+  /// Sépare l'identité du contenu de soin. C'est exactement la ligne que
+  /// l'agent communautaire ne franchit pas : il oriente vers le CSB.
+  final bool canSeeCareHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -98,20 +110,31 @@ class _Content extends StatelessWidget {
 
         const SizedBox(height: AppDimens.space24),
 
-        _IdentityCard(beneficiary: beneficiary),
+        _IdentityCard(
+          beneficiary: beneficiary,
+          showContactDetails: canSeeCareHistory,
+        ),
         const SizedBox(height: AppDimens.space24),
 
         _QrCard(beneficiary: beneficiary),
         const SizedBox(height: AppDimens.space24),
 
-        Text('Suite du dossier', style: theme.textTheme.titleLarge),
-        const SizedBox(height: AppDimens.space8),
-        Text(
-          "L'historique des soins et la saisie des consultations, vaccinations "
-          'et activités de planification familiale arrivent en Phase 2 '
-          '(tickets 2.3 à 2.7).',
-          style: theme.textTheme.bodyLarge,
-        ),
+        if (canSeeCareHistory) ...[
+          Text('Suite du dossier', style: theme.textTheme.titleLarge),
+          const SizedBox(height: AppDimens.space8),
+          Text(
+            "L'historique des soins et la saisie des consultations, "
+            'vaccinations et activités de planification familiale arrivent '
+            'en Phase 2 (tickets 2.3 à 2.7).',
+            style: theme.textTheme.bodyLarge,
+          ),
+        ] else
+          Text(
+            "Votre profil consulte l'identité des personnes pour les orienter "
+            'vers le centre. Le contenu médical du dossier ne vous est pas '
+            'accessible.',
+            style: theme.textTheme.bodyMedium,
+          ),
         const SizedBox(height: AppDimens.space32),
       ],
     );
@@ -119,9 +142,13 @@ class _Content extends StatelessWidget {
 }
 
 class _IdentityCard extends StatelessWidget {
-  const _IdentityCard({required this.beneficiary});
+  const _IdentityCard({
+    required this.beneficiary,
+    required this.showContactDetails,
+  });
 
   final Beneficiary beneficiary;
+  final bool showContactDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +169,9 @@ class _IdentityCard extends StatelessWidget {
             if (beneficiary.fokontany != null &&
                 beneficiary.fokontany!.isNotEmpty)
               _Field(label: 'Fokontany', value: beneficiary.fokontany!),
-            if (beneficiary.phone != null && beneficiary.phone!.isNotEmpty)
+            if (showContactDetails &&
+                beneficiary.phone != null &&
+                beneficiary.phone!.isNotEmpty)
               _Field(label: 'Téléphone', value: beneficiary.phone!),
           ],
         ),

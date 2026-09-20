@@ -5,7 +5,9 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from './auth/guards/permissions.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { BeneficiariesModule } from './beneficiaries/beneficiaries.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -15,15 +17,17 @@ import { PrismaModule } from './prisma/prisma.module';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     PrismaModule,
     AuthModule,
+    BeneficiariesModule,
   ],
   controllers: [HealthController],
   providers: [
-    // Ordre volontaire : limitation de débit, puis authentification, puis rôles.
-    // Les gardes sont globales pour qu'une route oubliée soit fermée par
-    // défaut plutôt qu'ouverte.
+    // Ordre volontaire : limitation de débit, puis authentification, puis
+    // rôles, puis permissions. Les gardes sont globales pour qu'une route
+    // oubliée soit fermée par défaut plutôt qu'ouverte.
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: PermissionsGuard },
   ],
 })
 export class AppModule {}

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
 import '../../core/theme/app_dimens.dart';
+import '../../domain/permissions.dart';
+import '../auth/permissions_provider.dart';
 import 'beneficiary_search_controller.dart';
 import 'widgets/beneficiary_tile.dart';
 
@@ -36,6 +38,9 @@ class _BeneficiarySearchScreenState
   Widget build(BuildContext context) {
     final state = ref.watch(beneficiarySearchProvider);
     final theme = Theme.of(context);
+    final canCreate = ref
+        .watch(permissionsProvider)
+        .contains(Permission.beneficiaryCreate);
 
     return Scaffold(
       appBar: AppBar(
@@ -88,18 +93,22 @@ class _BeneficiarySearchScreenState
               ),
             ),
 
-            Expanded(child: _Results(state: state)),
+            Expanded(
+              child: _Results(state: state, canCreate: canCreate),
+            ),
           ],
         ),
       ),
 
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _createBeneficiary(context),
-        icon: const Icon(Icons.person_add_alt_1),
-        label: const Text('Nouveau dossier'),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-      ),
+      floatingActionButton: canCreate
+          ? FloatingActionButton.extended(
+              onPressed: () => _createBeneficiary(context),
+              icon: const Icon(Icons.person_add_alt_1),
+              label: const Text('Nouveau dossier'),
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+            )
+          : null,
     );
   }
 
@@ -115,9 +124,10 @@ class _BeneficiarySearchScreenState
 }
 
 class _Results extends StatelessWidget {
-  const _Results({required this.state});
+  const _Results({required this.state, required this.canCreate});
 
   final BeneficiarySearchState state;
+  final bool canCreate;
 
   @override
   Widget build(BuildContext context) {

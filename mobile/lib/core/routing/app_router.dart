@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../domain/permissions.dart';
 import '../../presentation/auth/auth_controller.dart';
 import '../../presentation/auth/login_screen.dart';
+import '../../presentation/auth/permissions_provider.dart';
 import '../../presentation/beneficiaries/beneficiary_detail_screen.dart';
 import '../../presentation/beneficiaries/beneficiary_form_screen.dart';
 import '../../presentation/beneficiaries/beneficiary_search_screen.dart';
@@ -55,14 +57,37 @@ final routerProvider = Provider<GoRouter>((ref) {
       final auth = ref.read(authControllerProvider);
       final location = state.matchedLocation;
 
-      return switch (auth) {
-        AuthLoading() => location == Routes.splash ? null : Routes.splash,
-        AuthSignedOut() => location == Routes.login ? null : Routes.login,
-        AuthSignedIn() =>
-          (location == Routes.login || location == Routes.splash)
-              ? Routes.home
-              : null,
-      };
+      switch (auth) {
+        case AuthLoading():
+          return location == Routes.splash ? null : Routes.splash;
+        case AuthSignedOut():
+          return location == Routes.login ? null : Routes.login;
+        case AuthSignedIn():
+          if (location == Routes.login || location == Routes.splash) {
+            return Routes.home;
+          }
+      }
+
+      // Une route atteinte autrement que par un bouton — lien profond,
+      // historique de navigation après un changement de rôle — doit être
+      // refusée comme les autres. Le serveur refuserait de toute façon, mais
+      // l'utilisateur ne doit pas se retrouver devant un formulaire voué à
+      // échouer.
+      final granted = ref.read(permissionsProvider);
+
+      if (location == Routes.newBeneficiary &&
+          !granted.contains(Permission.beneficiaryCreate)) {
+        return Routes.home;
+      }
+
+      if (!granted.contains(Permission.beneficiaryViewIdentity) &&
+          (location == Routes.search ||
+              location == Routes.scan ||
+              location.startsWith(Routes.beneficiary))) {
+        return Routes.home;
+      }
+
+      return null;
     },
 
     routes: [

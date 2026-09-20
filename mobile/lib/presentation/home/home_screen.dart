@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
 import '../../core/theme/app_dimens.dart';
+import '../../domain/permissions.dart';
 import '../auth/auth_controller.dart';
+import '../auth/permissions_provider.dart';
 
 /// Accueil.
 ///
@@ -22,6 +24,17 @@ class HomeScreen extends ConsumerWidget {
 
     final user = auth.user;
     final theme = Theme.of(context);
+    final can = ref.watch(permissionsProvider);
+
+    // Un profil sans accès aux dossiers individuels — l'administration
+    // nationale — n'a rien à faire sur cet écran (CDC §5).
+    if (!can.contains(Permission.beneficiaryViewIdentity)) {
+      return _NoRecordAccessScreen(
+        fullName: user.fullName,
+        roleLabel: user.role.label,
+        onSignOut: () => _confirmSignOut(context, ref),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -92,12 +105,14 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppDimens.space12),
 
-            _SecondaryAction(
-              icon: Icons.person_add_alt_1,
-              label: 'Nouveau dossier',
-              onTap: () => context.push(Routes.newBeneficiary),
-            ),
-            const SizedBox(height: AppDimens.space12),
+            if (can.contains(Permission.beneficiaryCreate)) ...[
+              _SecondaryAction(
+                icon: Icons.person_add_alt_1,
+                label: 'Nouveau dossier',
+                onTap: () => context.push(Routes.newBeneficiary),
+              ),
+              const SizedBox(height: AppDimens.space12),
+            ],
 
             _SecondaryAction(
               icon: Icons.qr_code_scanner,
@@ -109,26 +124,32 @@ class HomeScreen extends ConsumerWidget {
             Text('Bientôt disponible', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppDimens.space8),
 
-            const _PlannedAction(
-              icon: Icons.assignment_outlined,
-              label: 'Enregistrer une consultation',
-              ticket: 'Ticket 2.4',
-            ),
-            const _PlannedAction(
-              icon: Icons.pregnant_woman_outlined,
-              label: 'Suivi de grossesse',
-              ticket: 'Ticket 2.5',
-            ),
-            const _PlannedAction(
-              icon: Icons.vaccines_outlined,
-              label: 'Enregistrer une vaccination',
-              ticket: 'Ticket 2.6',
-            ),
-            const _PlannedAction(
-              icon: Icons.insights_outlined,
-              label: 'Tableau de bord du centre',
-              ticket: 'Ticket 2.8',
-            ),
+            // Annoncées seulement à qui pourra les utiliser : promettre une
+            // fonction qu'un profil n'aura jamais est une fausse promesse.
+            if (can.contains(Permission.consultationRecord))
+              const _PlannedAction(
+                icon: Icons.assignment_outlined,
+                label: 'Enregistrer une consultation',
+                ticket: 'Ticket 2.4',
+              ),
+            if (can.contains(Permission.antenatalRecord))
+              const _PlannedAction(
+                icon: Icons.pregnant_woman_outlined,
+                label: 'Suivi de grossesse',
+                ticket: 'Ticket 2.5',
+              ),
+            if (can.contains(Permission.vaccinationRecord))
+              const _PlannedAction(
+                icon: Icons.vaccines_outlined,
+                label: 'Enregistrer une vaccination',
+                ticket: 'Ticket 2.6',
+              ),
+            if (can.contains(Permission.dashboardCsb))
+              const _PlannedAction(
+                icon: Icons.insights_outlined,
+                label: 'Tableau de bord du centre',
+                ticket: 'Ticket 2.8',
+              ),
           ],
         ),
       ),
@@ -302,6 +323,70 @@ class _PlannedAction extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(
             horizontal: AppDimens.space16,
             vertical: AppDimens.space4,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Écran des profils qui n'accèdent à aucun dossier individuel.
+///
+/// L'administration nationale ne consulte que des indicateurs agrégés
+/// (CDC §5). Plutôt qu'un accueil vide dont elle ne comprendrait pas la
+/// pauvreté, on dit explicitement pourquoi il n'y a rien et où aller.
+class _NoRecordAccessScreen extends StatelessWidget {
+  const _NoRecordAccessScreen({
+    required this.fullName,
+    required this.roleLabel,
+    required this.onSignOut,
+  });
+
+  final String fullName;
+  final String roleLabel;
+  final VoidCallback onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Vitals'),
+        actions: [
+          IconButton(
+            onPressed: onSignOut,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Se déconnecter',
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimens.space32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.insights_outlined,
+                  size: 48,
+                  color: theme.colorScheme.outline,
+                ),
+                const SizedBox(height: AppDimens.space16),
+                Text(fullName, style: theme.textTheme.titleMedium),
+                Text(roleLabel, style: theme.textTheme.bodyMedium),
+                const SizedBox(height: AppDimens.space16),
+                Text(
+                  'Ce profil ne consulte pas les dossiers individuels, '
+                  'seulement des indicateurs agrégés.\n\n'
+                  'La gestion des centres et des comptes se fait depuis '
+                  "l'espace d'administration, sur ordinateur.",
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge,
+                ),
+              ],
+            ),
           ),
         ),
       ),
