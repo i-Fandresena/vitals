@@ -26,6 +26,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool _passwordVisible = false;
 
+  /// Progression suivie ici et non dans l'état global : l'écran doit rester
+  /// affiché pendant la tentative, sinon le message d'échec apparaîtrait
+  /// ailleurs que là où l'utilisateur vient d'appuyer.
+  bool _enCours = false;
+
   @override
   void dispose() {
     _usernameController.dispose();
@@ -34,25 +39,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     // Referme le clavier : sur un petit écran il masque le message d'erreur.
     FocusScope.of(context).unfocus();
 
     if (_formKey.currentState?.validate() != true) return;
+    if (_enCours) return;
 
-    ref
-        .read(authControllerProvider.notifier)
-        .signIn(
-          username: _usernameController.text,
-          password: _passwordController.text,
-        );
+    setState(() => _enCours = true);
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .signIn(
+            username: _usernameController.text,
+            password: _passwordController.text,
+          );
+    } finally {
+      // En cas de succès le routeur a déjà quitté cet écran ; le `mounted`
+      // évite de toucher un état démonté.
+      if (mounted) setState(() => _enCours = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
-    final isLoading = state is AuthLoading;
     final error = state is AuthSignedOut ? state.error : null;
+    final isLoading = _enCours;
 
     final theme = Theme.of(context);
 
@@ -227,7 +240,9 @@ class _ErrorBanner extends StatelessWidget {
           Icon(Icons.error_outline, color: scheme.onErrorContainer),
           const SizedBox(width: AppDimens.space12),
           Expanded(
-            child: Text(
+            // Sélectionnable : un message technique doit pouvoir être recopié
+            // ou envoyé au responsable, pas seulement lu puis oublié.
+            child: SelectableText(
               message,
               style: Theme.of(context).textTheme.bodyLarge
                   ?.copyWith(color: scheme.onErrorContainer),
