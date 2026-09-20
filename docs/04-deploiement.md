@@ -6,7 +6,7 @@ VPS, l'APK construit localement puis distribué aux centres.
 ```
    Téléphone du CSB                    VPS
   ┌────────────────┐        ┌──────────────────────────────┐
-  │  APK Vitals    │  HTTPS │  Caddy  (TLS automatique)    │
+  │  APK Vitals    │  HTTPS │  Traefik de Coolify (§2)     │
   │  base locale   │───────▶│    ├─ api-vitals…  → API     │
   │  = source de   │        │    └─ vitals…      → admin   │
   │    vérité      │        │  PostgreSQL (réseau interne) │
