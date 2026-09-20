@@ -13,6 +13,7 @@ abstract final class AppDimens {
   static const double space8 = 8;
   static const double space12 = 12;
   static const double space16 = 16;
+  static const double space20 = 20;
   static const double space24 = 24;
   static const double space32 = 32;
   static const double space48 = 48;
@@ -37,9 +38,16 @@ abstract final class AppDimens {
   static const double listRowHeight = 72;
 
   // --- Rayons ---
-  static const double radiusSmall = 8;
-  static const double radiusMedium = 12;
-  static const double radiusLarge = 16;
+  //
+  // Plus généreux que la norme Material, repris du gabarit mobile : des angles
+  // marqués rendent une interface dense, et celle-ci est déjà chargée
+  // d'informations cliniques.
+  static const double radiusSmall = 10;
+  static const double radiusMedium = 14;
+  static const double radiusLarge = 20;
+
+  /// Rayon des pastilles et de la barre de navigation flottante.
+  static const double radiusPill = 999;
 
   // --- Bordures ---
 

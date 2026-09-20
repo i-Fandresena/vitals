@@ -23,6 +23,7 @@ abstract final class Routes {
   static const String search = '/recherche';
   static const String newBeneficiary = '/nouveau-dossier';
   static const String scan = '/scan';
+  static const String profil = '/profil';
 
   /// `/dossier/<uuid>`
   static const String beneficiary = '/dossier';
