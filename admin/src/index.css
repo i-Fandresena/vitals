@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* Jetons repris de l'application mobile (mobile/lib/core/theme/app_colors.dart)
+   pour que les deux surfaces se ressemblent. Les contrastes restent au-dessus
+   des minimums d'accessibilité : l'espace admin s'utilise aussi sur des écrans
+   médiocres, dans des bureaux mal éclairés. */
+@theme {
+  --color-primary: #0b6b5e;
+  --color-primary-hover: #095950;
+  --color-primary-container: #b8efe3;
+  --color-on-primary-container: #00201b;
+
+  --color-surface: #fafcfb;
+  --color-surface-container: #eff3f1;
+  --color-on-surface: #12100e;
+  --color-on-surface-variant: #3c4a46;
+  --color-outline: #6b7a75;
+  --color-outline-variant: #c3ceca;
+
+  --color-danger: #b3261e;
+  --color-danger-container: #f9dedc;
+  --color-on-danger-container: #410e0b;
+
+  --color-success: #1b6b3a;
+  --color-success-container: #cdefd9;
+
+  --color-warning: #8a5300;
+  --color-warning-container: #ffeac8;
+}
+
+html {
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* 16 px et non 14 : ces écrans se lisent longtemps. */
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Le focus reste visible partout : l'espace admin se remplit largement au
+   clavier, formulaire après formulaire. */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
