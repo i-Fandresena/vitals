@@ -49,6 +49,10 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
 
+# Script d'amorçage du premier compte d'administration. En JavaScript simple :
+# ts-node est retiré avec les dépendances de développement.
+COPY scripts ./scripts
+
 # L'application ne tourne pas en root : une faille d'exécution de code ne doit
 # pas donner la main sur le conteneur entier.
 USER node

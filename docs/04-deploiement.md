@@ -91,9 +91,22 @@ certificat valide obtenu automatiquement.
 
 ### Créer le premier compte
 
-⚠️ **Il n'existe pas encore de moyen de créer un compte.** L'espace
-d'administration n'est pas développé et le script `seed` est réservé au
-développement. C'est un prérequis à lever avant toute mise en service réelle.
+L'amorçage se fait en ligne de commande : sans compte, personne ne peut entrer
+dans l'espace d'administration pour en créer un.
+
+```bash
+docker compose exec api node scripts/creer-admin.js admin "Nom Prenom"
+```
+
+Le mot de passe est généré et **affiché une seule fois**. Le noter, puis le
+changer à la première connexion.
+
+Le script refuse de s'exécuter s'il existe déjà un compte d'administration
+actif : les suivants se créent depuis l'espace d'administration, où chaque
+création est journalisée avec son auteur (CDC §8).
+
+Ensuite, tout se passe sur `https://vitals.aura-plus.site` : créer les centres,
+puis les comptes des soignants.
 
 ## 4 — Construire l'APK
 
@@ -194,7 +207,6 @@ par-dessus une version de même numéro.
 
 | Point | Ticket |
 |---|---|
-| **Créer des comptes** — aucun moyen aujourd'hui hors du seed | espace admin |
 | **Synchronisation** — les données restent sur les téléphones | 3.1 |
 | **Chiffrement de la base locale** — un téléphone perdu expose les dossiers | 3.3 |
 | Journal d'audit consultable | 3.4 |
