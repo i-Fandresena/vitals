@@ -65,6 +65,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   build_runner: ^2.16.1
   drift_dev: ^2.35.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -107,3 +108,24 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Icone de l'application, generee depuis assets/branding/ par
+#   dart run flutter_launcher_icons
+#
+# Le logo d'origine porte le mot « Vitals » sous le symbole. Il n'est pas
+# repris ici : a 48 dp ce texte serait illisible, et Android affiche deja le
+# nom de l'application sous l'icone. Seul le symbole est utilise.
+flutter_launcher_icons:
+  android: ic_launcher
+  ios: false
+
+  # Icone carree, pour Android 7 qui ignore les icones adaptatives.
+  image_path: assets/branding/icon_legacy.png
+
+  # Android 8+ : le lanceur applique son propre masque (cercle, carre arrondi,
+  # goutte). Seuls les 66 % centraux sont garantis visibles, d'ou un symbole
+  # dimensionne a 62 % dans icon_foreground.png.
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/branding/icon_foreground.png
+
+  min_sdk_android: 24
