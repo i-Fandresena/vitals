@@ -53,6 +53,21 @@ dependencies:
   mobile_scanner: ^7.4.2
   go_router: ^18.0.1
 
+# Bibliothèque SQLite utilisée à la compilation (ticket 3.3).
+#
+# `sqlite3mc` — SQLite3 Multiple Ciphers — plutôt que `sqlcipher` : il suit la
+# version courante de SQLite, là où la variante SQLCipher fournie embarque
+# parfois une version plus ancienne. Sur une application qui manipule des
+# données de santé, rester à jour sur les correctifs de SQLite compte autant
+# que le chiffrement lui-même.
+#
+# Il sait par ailleurs lire et écrire le format SQLCipher, que la base utilise
+# (voir data/local/app_database.dart).
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

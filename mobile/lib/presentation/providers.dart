@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/local/app_database.dart';
@@ -10,7 +11,11 @@ import '../data/secure/token_store.dart';
 /// Dépendances partagées de l'application.
 
 final databaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase(openAppDatabase());
+  // `openAppDatabase` est asynchrone — il lit la clé de chiffrement dans le
+  // coffre du système. `LazyDatabase` diffère l'ouverture jusqu'à la première
+  // requête, ce qui laisse le provider synchrone et évite de bloquer le
+  // démarrage de l'application sur un accès au Keystore.
+  final db = AppDatabase(LazyDatabase(openAppDatabase));
   ref.onDispose(db.close);
   return db;
 });

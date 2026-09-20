@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 // Importés pour le code généré ci-dessous (`part`), qui manipule directement
@@ -8,6 +11,8 @@ import '../../domain/enums/clinical_enums.dart';
 import '../../domain/enums/user_role.dart';
 import 'converters.dart';
 import 'daos/beneficiary_dao.dart';
+import 'daos/care_event_dao.dart';
+import 'database_key.dart';
 import 'tables/beneficiary_tables.dart';
 import 'tables/care_event_tables.dart';
 import 'tables/reference_tables.dart';
@@ -36,7 +41,7 @@ part 'app_database.g.dart';
     SyncQueueEntries,
     AuditEntries,
   ],
-  daos: [BeneficiaryDao],
+  daos: [BeneficiaryDao, CareEventDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
@@ -108,27 +113,65 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-/// Ouvre la base de l'application.
+/// Ouvre la base de l'application, **chiffrée** (ticket 3.3).
 ///
-/// `driftDatabase` place le fichier dans le répertoire de données privé de
-/// l'application et applique les contournements nécessaires aux anciennes
-/// versions d'Android — ce qui compte ici, les appareils des CSB étant souvent
-/// anciens (`minSdk 24`).
+/// Le fichier SQLite d'une application Android est extractible dès que
+/// l'appareil est déverrouillé ou rooté. Sans chiffrement, les dossiers de
+/// santé d'un téléphone perdu se lisent avec n'importe quel éditeur.
 ///
-/// ⚠️ **Le chiffrement au repos n'est pas encore activé** : c'est l'objet du
-/// ticket 3.3. Tant qu'il n'est pas livré, l'application ne doit contenir
-/// aucune donnée réelle de patient.
-///
-/// Les bibliothèques SQLCipher sont déjà embarquées par `drift_flutter`, donc
-/// le ticket 3.3 se limitera à générer une clé, la ranger dans le coffre
-/// sécurisé du système et l'appliquer ici : le point de bascule est
-/// volontairement isolé dans cette seule fonction.
-QueryExecutor openAppDatabase({String name = 'vitals'}) {
+/// La clé est tirée au premier lancement et rangée dans le coffre du système
+/// (voir [DatabaseKey]). Elle n'est ni dérivée d'un mot de passe, ni transmise
+/// au serveur, ni sauvegardée.
+Future<QueryExecutor> openAppDatabase({String name = 'vitals'}) async {
+  final cles = DatabaseKey();
+  final cle = await cles.obtenir();
+
+  // Écarte la base non chiffrée d'avant le ticket 3.3.
+  //
+  // Sûr par construction : le chiffrement EST la condition posée à la saisie
+  // de données réelles, donc une base antérieure ne contient que des données
+  // de test. Tenter de l'ouvrir avec une clé échouerait de toute façon, avec
+  // une erreur « file is not a database » incompréhensible pour l'utilisateur.
+  if (await cles.premierChiffrement()) {
+    await _ecarterBaseNonChiffree(name);
+    await cles.marquerChiffre();
+  }
+
   return driftDatabase(
     name: name,
-    native: const DriftNativeOptions(
+    native: DriftNativeOptions(
       // Isole la base des autres fichiers de l'application.
       databaseDirectory: getApplicationSupportDirectory,
+      setup: (db) {
+        // `PRAGMA key` doit précéder toute autre instruction : SQLCipher lit
+        // l'en-tête du fichier au premier accès, et sans clé il le déclare
+        // corrompu.
+        db.execute('PRAGMA key = ${DatabaseKey.pragma(cle)};');
+
+        // Format SQLCipher 4, le plus répandu : une base produite ici reste
+        // lisible par les outils standard, ce qui compte le jour où il faudra
+        // expertiser un appareil ou récupérer des données.
+        db.execute('PRAGMA cipher = sqlcipher;');
+
+        // Vérifie immédiatement que la clé est la bonne. Sans cette lecture,
+        // l'erreur ne surgirait qu'à la première requête métier, loin de sa
+        // cause.
+        db.execute('SELECT count(*) FROM sqlite_master;');
+      },
     ),
   );
+}
+
+/// Supprime une base laissée par une version antérieure au chiffrement.
+Future<void> _ecarterBaseNonChiffree(String name) async {
+  try {
+    final dossier = await getApplicationSupportDirectory();
+    for (final suffixe in ['', '-wal', '-shm']) {
+      final fichier = File(p.join(dossier.path, '$name.sqlite$suffixe'));
+      if (fichier.existsSync()) await fichier.delete();
+    }
+  } on FileSystemException {
+    // Une base impossible à supprimer empêchera l'ouverture juste après, avec
+    // un message plus parlant que celui qu'on produirait ici.
+  }
 }
