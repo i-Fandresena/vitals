@@ -1,8 +1,26 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Coordonnées du keystore de signature, lues depuis android/key.properties.
+//
+// Ce fichier et le keystore lui-même ne sont JAMAIS versionnés : quiconque les
+// possède peut publier une mise à jour que les appareils installeront comme
+// authentique. Voir docs/04-deploiement.md pour les créer.
+//
+// Absent, le build de release retombe sur la clé de debug — pratique pour
+// tester, mais l'APK produit n'est pas distribuable.
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("key.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+val hasReleaseKeystore = keystoreProperties.containsKey("storeFile")
 
 android {
     namespace = "ai.maternal.vitals"
@@ -15,25 +33,41 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "ai.maternal.vitals"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
-        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
-        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
-        // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                // Permet à `flutter build apk --release` de fonctionner sans
+                // keystore, pour mesurer une taille ou tester localement.
+                // L'APK produit ne doit pas être distribué.
+                signingConfigs.getByName("debug")
+            }
+
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
@@ -41,6 +75,18 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
+
+// Avertit au moment du build plutôt qu'à la distribution : un APK signé avec
+// la clé de debug ne peut pas être mis à jour par un APK correctement signé,
+// et la clé de debug diffère d'une machine à l'autre.
+gradle.taskGraph.whenReady {
+    if (!hasReleaseKeystore && allTasks.any { it.name.contains("Release") }) {
+        logger.warn(
+            "\n  ⚠  Build de release SANS keystore : signé avec la clé de debug.\n" +
+                "     Cet APK ne doit pas être distribué. Voir docs/04-deploiement.md.\n",
+        )
     }
 }
 

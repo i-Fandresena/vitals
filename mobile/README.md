@@ -38,18 +38,27 @@ Les fichiers atterrissent dans `build/app/outputs/flutter-apk/`.
 
 **Toujours utiliser `--split-per-abi` pour distribuer.** Un APK universel
 embarque les bibliothèques natives des trois architectures ; découpé, chaque
-appareil ne télécharge que la sienne. Tailles mesurées sur la Phase 1 :
+appareil ne télécharge que la sienne.
 
 | Variante | Taille | Pour |
 |---|---|---|
-| `app-armeabi-v7a-release.apk` | 17,0 Mo | appareils 32 bits, les plus courants en CSB |
-| `app-arm64-v8a-release.apk` | 19,4 Mo | appareils 64 bits récents |
-| `app-x86_64-release.apk` | 20,8 Mo | émulateurs — inutile sur le terrain |
-| `app-debug.apk` | 163 Mo | développement seulement, ne jamais distribuer |
+| `app-armeabi-v7a-release.apk` | 23,6 Mo | appareils 32 bits, les plus courants en CSB |
+| `app-arm64-v8a-release.apk` | 27,5 Mo | appareils 64 bits récents |
+| `app-x86_64-release.apk` | 29,8 Mo | émulateurs — inutile sur le terrain |
+| `app-debug.apk` | ~165 Mo | développement seulement, ne jamais distribuer |
 
-L'écart entre 17 Mo et 163 Mo n'est pas un détail : l'APK se transfère souvent
+L'écart entre 24 Mo et 165 Mo n'est pas un détail : l'APK se transfère souvent
 par clé USB ou par partage direct entre téléphones, sur des connexions où
-163 Mo sont hors de portée.
+165 Mo sont hors de portée.
+
+Le ticket 2.1 a fait passer la variante 32 bits de 17 à 23,6 Mo. L'écart vient
+du scanner de QR codes : ML Kit embarque 3,2 Mo de bibliothèque native et
+900 Ko de modèles. C'est le prix d'un **scan qui fonctionne sans réseau** —
+la variante qui télécharge les modèles à la demande serait plus légère mais
+inutilisable dans un CSB hors ligne.
+
+La signature de release et la création du keystore sont décrites dans
+[docs/04-deploiement.md](../docs/04-deploiement.md).
 
 ## Organisation
 

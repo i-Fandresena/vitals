@@ -1,0 +1,74 @@
+# Reverse proxy et TLS de Vitals.
+#
+# Caddy obtient et renouvelle seul les certificats Let's Encrypt. Il n'y a ni
+# certbot ni tâche planifiée à surveiller : un certificat expiré couperait la
+# synchronisation de tous les centres, autant supprimer la pièce qui peut
+# casser en silence.
+
+{
+	email {$ACME_EMAIL}
+	# Journaux sans corps de requête : ils transportent des données de santé.
+	servers {
+		metrics
+	}
+}
+
+# ---------- API ----------
+{$API_DOMAIN} {
+	encode zstd gzip
+
+	# En-têtes de sécurité. L'API ne sert pas de page web, mais un navigateur
+	# peut tout de même l'atteindre.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	reverse_proxy api:3000 {
+		# Sur une connexion 2G de brousse, une requête peut mettre plusieurs
+		# dizaines de secondes. Couper trop tôt ferait échouer des
+		# synchronisations qui auraient abouti.
+		transport http {
+			read_timeout 120s
+			write_timeout 120s
+		}
+	}
+
+	log {
+		output file /data/logs/api.log {
+			roll_size 20mb
+			roll_keep 10
+		}
+		# Format court : ni corps, ni en-têtes. Un journal d'accès détaillé
+		# deviendrait lui-même un fichier de données de santé.
+		format json
+	}
+}
+
+# ---------- Espace d'administration ----------
+{$ADMIN_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+
+	root * /srv/admin
+	try_files {path} /index.html
+	file_server
+
+	log {
+		output file /data/logs/admin.log {
+			roll_size 20mb
+			roll_keep 10
+		}
+		format json
+	}
+}

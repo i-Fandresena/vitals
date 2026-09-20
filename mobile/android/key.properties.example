@@ -1,0 +1,20 @@
+# Copier en android/key.properties et renseigner.
+#
+# Ni ce fichier rempli ni le keystore ne doivent être versionnés : quiconque
+# les possède peut publier une mise à jour que les appareils des CSB
+# installeront comme authentique.
+#
+# Créer le keystore (validité 10 000 jours, exigée par Google Play) :
+#
+#   keytool -genkey -v -keystore ~/vitals-release.jks \
+#     -keyalg RSA -keysize 4096 -validity 10000 -alias vitals
+#
+# ⚠️ Ce keystore est IRREMPLAÇABLE. Le perdre interdit définitivement toute
+#    mise à jour de l'application déjà installée : il faudrait republier sous
+#    un autre identifiant et faire désinstaller puis réinstaller dans chaque
+#    centre. Le sauvegarder hors du poste de développement.
+
+storeFile=/chemin/absolu/vers/vitals-release.jks
+storePassword=
+keyAlias=vitals
+keyPassword=

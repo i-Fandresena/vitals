@@ -230,21 +230,98 @@ premier, se déconnecter, se connecter avec le second, chercher ce dossier.
 
 ✅ Il n'apparaît pas, et son QR code ne l'ouvre pas non plus.
 
+## 6 — Droits par profil (ticket 2.2)
+
+Le seed crée un compte par profil, tous avec le mot de passe
+`Vitals-dev-2026` : `agent`, `infirmier`, `sagefemme`, `responsable`, `admin`.
+
+### 6.1 L'agent communautaire ne voit pas le contenu médical
+
+Se connecter avec `agent`, ouvrir un dossier existant.
+
+✅ L'identité s'affiche — nom, âge, identifiant, fokontany — mais **ni
+téléphone, ni contenu de soin**. Un encart explique pourquoi.
+
+C'est la ligne que ce profil ne franchit pas : il oriente vers le CSB, il ne
+soigne pas. C'est aussi le profil le plus exposé, sur un appareil partagé hors
+du centre.
+
+### 6.2 L'administration nationale n'accède à aucun dossier
+
+Se connecter avec `admin`.
+
+✅ Aucun accès aux dossiers : un écran explique que ce profil ne consulte que
+des indicateurs agrégés (CDC §5). Ni recherche, ni création, ni scan.
+
+### 6.3 **Le refus vient du serveur, pas seulement de l'interface**
+
+C'est la vérification décisive du ticket. Masquer un bouton ne protège rien.
+
+Récupérer un jeton d'agent communautaire :
+
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/login -H "Content-Type: application/json" -d '{"username":"agent","password":"Vitals-dev-2026","deviceId":"test-0001"}'
+```
+
+Copier la valeur de `accessToken`, puis appeler l'API directement — sans passer
+par l'application, donc sans qu'aucun bouton ne soit masqué :
+
+```bash
+curl -i http://localhost:3000/api/v1/beneficiaries -H "Authorization: Bearer <accessToken>"
+```
+
+✅ `200` — l'agent communautaire peut lister l'identité des dossiers.
+
+Avec le compte `admin`, la même requête :
+
+✅ `403 Action non autorisée pour votre profil`.
+
+### 6.4 Le message ne révèle pas quel profil aurait le droit
+
+✅ La réponse `403` dit seulement « Action non autorisée pour votre profil ».
+Indiquer la permission manquante renseignerait un attaquant sur la structure
+des droits.
+
+### 6.5 Les deux modèles de droits concordent
+
+```bash
+cd backend && npx jest        # 30 tests
+cd mobile  && flutter test    # 54 tests
+```
+
+✅ Les deux suites vérifient la même matrice. Une divergence entre
+l'application et le serveur produirait soit un bouton qui échoue devant le
+patient, soit une action refusée sans explication.
+
+## 7 — Icône de l'application
+
+Installer l'APK sur un téléphone.
+
+✅ L'icône est le symbole Vitals — dossier, croix et tracé cardiaque — sur fond
+blanc, avec le nom « Vitals » dessous.
+
+Le mot « Vitals » du logo d'origine n'est volontairement pas repris dans
+l'icône : à 48 dp il serait illisible, et Android affiche déjà le nom de
+l'application juste en dessous.
+
+✅ Le symbole n'est rogné sur aucun lanceur — Android applique son propre
+masque (cercle, carré arrondi, goutte) et ne garantit que les 66 % centraux.
+
 ## Ce qui ne peut pas encore être testé
 
 Ces fonctions ne sont pas développées ; leur absence n'est pas un défaut.
 
 | Fonction | Ticket |
 |---|---|
-| Droits différenciés par profil | 2.2 |
 | Historique des soins dans la fiche | 2.3 |
 | Consultations, grossesse, vaccination, PF | 2.4 à 2.7 |
 | Tableau de bord du CSB | 2.8 |
 | Synchronisation hors ligne | 3.1 |
 | Chiffrement de la base locale | 3.3 |
 
-⚠️ À ce stade, **tous les profils connectés peuvent créer et consulter les
-dossiers de leur centre**. La matrice des droits est le ticket 2.2.
+⚠️ Les droits sont appliqués (ticket 2.2), mais **rien ne remonte encore au
+serveur** : les endpoints existent et refusent correctement, l'application ne
+les appelle pas encore. C'est le ticket 3.1.
 
 ## Que faire si un test échoue
 
