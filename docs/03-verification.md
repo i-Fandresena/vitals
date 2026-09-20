@@ -307,6 +307,66 @@ l'application juste en dessous.
 ✅ Le symbole n'est rogné sur aucun lanceur — Android applique son propre
 masque (cercle, carré arrondi, goutte) et ne garantit que les 66 % centraux.
 
+## 8 — Synchronisation (ticket 3.1)
+
+C'est la vérification la plus importante du projet : elle décide si les
+données saisies en brousse arrivent au serveur sans perte ni doublon.
+
+### 8.1 Un appareil neuf reçoit ce qu'il ne connaît pas
+
+Installer l'APK, se connecter avec un compte du centre.
+
+✅ La recherche montre les dossiers du centre, y compris ceux créés par
+d'autres. Un bandeau annonce brièvement la synchronisation, puis disparaît.
+
+### 8.2 **Créer hors ligne, retrouver en ligne**
+
+C'est le livrable du ticket.
+
+1. Mettre le téléphone **en mode avion**.
+2. Créer un dossier — nom reconnaissable, par exemple « ESSAI Terrain ».
+3. ✅ Le dossier s'ouvre immédiatement, avec son identifiant et son QR code.
+4. ✅ Un bandeau bleu annonce « Hors ligne — 1 enregistrement en attente.
+   Rien n'est perdu. » Il n'est **pas rouge** : travailler sans réseau est le
+   régime normal, pas une panne.
+5. Fermer et rouvrir l'application, toujours en mode avion.
+   ✅ Le dossier est toujours là. Le bandeau aussi.
+6. Rétablir le réseau.
+   ✅ Le bandeau passe en « Synchronisation… » tout seul, puis disparaît.
+7. Ouvrir https://vitals.aura-plus.site → Indicateurs.
+   ✅ Le compteur « Nouveaux dossiers » a augmenté de 1.
+
+### 8.3 Aucun doublon après une coupure
+
+Refaire l'étape 8.2, mais couper le réseau **pendant** la synchronisation,
+puis le rétablir.
+
+✅ Le dossier apparaît **une seule fois** côté serveur. L'identifiant est
+attribué par le téléphone, donc un renvoi écrit au même endroit au lieu de
+créer une deuxième ligne.
+
+### 8.4 Deux téléphones, le même centre
+
+Créer un dossier sur un premier téléphone, synchroniser, puis synchroniser le
+second.
+
+✅ Le dossier apparaît sur le second téléphone.
+
+### 8.5 Le cloisonnement tient aussi en synchronisation
+
+Avec un compte d'un autre centre, synchroniser.
+
+✅ Aucun dossier du premier centre n'arrive. Le serveur borne le
+téléchargement au centre de l'utilisateur, ce n'est pas un filtre d'affichage.
+
+### 8.6 La déconnexion remet le compteur à zéro
+
+Se déconnecter, se reconnecter avec un **autre** compte du même centre.
+
+✅ La synchronisation retélécharge tout depuis le début. Sans cela, le second
+soignant hériterait du curseur du premier et manquerait tout ce qui a changé
+avant son arrivée.
+
 ## Ce qui ne peut pas encore être testé
 
 Ces fonctions ne sont pas développées ; leur absence n'est pas un défaut.
@@ -315,13 +375,18 @@ Ces fonctions ne sont pas développées ; leur absence n'est pas un défaut.
 |---|---|
 | Historique des soins dans la fiche | 2.3 |
 | Consultations, grossesse, vaccination, PF | 2.4 à 2.7 |
-| Tableau de bord du CSB | 2.8 |
-| Synchronisation hors ligne | 3.1 |
+| Tableau de bord du CSB dans l'application | 2.8 |
 | Chiffrement de la base locale | 3.3 |
 
-⚠️ Les droits sont appliqués (ticket 2.2), mais **rien ne remonte encore au
-serveur** : les endpoints existent et refusent correctement, l'application ne
-les appelle pas encore. C'est le ticket 3.1.
+⚠️ La synchronisation **envoie** les dossiers mais pas encore les événements
+de soin : ils n'ont pas de saisie dans l'application (tickets 2.4 à 2.7). Le
+serveur les refuse explicitement, avec un message qui le dit — l'appareil sait
+ainsi que ce n'est pas une panne réseau et cesse de réessayer. Le
+**téléchargement**, lui, ramène déjà tout.
+
+⚠️ **La base locale n'est toujours pas chiffrée** (ticket 3.3). Un téléphone
+perdu expose les dossiers qu'il contient. Tests avec des noms fictifs
+uniquement.
 
 ## Que faire si un test échoue
 

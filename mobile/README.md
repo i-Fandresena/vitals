@@ -128,17 +128,16 @@ flutter build apk --debug
 ## État
 
 **Phase 1 livrée** — socle technique : base locale, authentification, session.
-**Ticket 2.1 livré** — création et recherche de dossiers, identifiant lisible,
-QR code et scan.
+**Tickets 2.1, 2.2 et 3.1 livrés** — dossiers, QR code, droits par profil et
+synchronisation bidirectionnelle.
 
 Limites connues à ce stade :
 
 - **Pas de chiffrement de la base locale** (ticket 3.3). Aucune donnée réelle de
   patient ne doit être saisie avant sa livraison.
-- **Pas de synchronisation** (ticket 3.1) : la file se remplit à chaque création,
-  mais rien ne la vide encore. Les dossiers restent sur l'appareil.
-- **Aucun droit différencié** (ticket 2.2) : tout profil connecté peut créer et
-  consulter les dossiers de son centre.
+- **La synchronisation n'envoie que les dossiers** : les événements de soin
+  n'ont pas encore de saisie (tickets 2.4 à 2.7). Le téléchargement, lui,
+  ramène déjà tout.
 - **La fiche dossier ne montre pas d'historique de soin** (ticket 2.3) — il n'y
   a encore rien à y montrer.
 - Un dossier ne peut pas être modifié ni archivé depuis l'application.
