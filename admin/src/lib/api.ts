@@ -154,12 +154,61 @@ export interface District {
   code: string;
   name: string;
   regionId: string;
+  regionName?: string;
+  csbCount?: number;
 }
 
 export interface Region {
   id: string;
   code: string;
   name: string;
+  districtCount?: number;
+}
+
+export interface AuditEntry {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  changedFields: string[];
+  auteur: { username: string; fullName: string; role: UserRole } | null;
+  csb: { code: string; name: string } | null;
+  deviceId: string | null;
+  serverTimestamp: string;
+}
+
+export type Granularite = 'semaine' | 'mois' | 'annee';
+export type Niveau = 'csb' | 'district' | 'region';
+
+export interface LigneIndicateur {
+  cle: string;
+  libelle: string;
+  consultations: number;
+  cpn: number;
+  vaccinations: number;
+  planificationFamiliale: number;
+  nouveauxDossiers: number;
+}
+
+export interface Indicateurs {
+  periode: { debut: string; fin: string; granularite: Granularite };
+  niveau: Niveau;
+  totaux: {
+    consultations: number;
+    cpn: number;
+    vaccinations: number;
+    planificationFamiliale: number;
+    nouveauxDossiers: number;
+    dossiersActifs: number;
+  };
+  repartition: LigneIndicateur[];
+  serie: Array<{
+    periode: string;
+    consultations: number;
+    cpn: number;
+    vaccinations: number;
+    planificationFamiliale: number;
+  }>;
 }
 
 // --- Appels ---
@@ -198,7 +247,31 @@ export const api = {
   },
 
   regions: () => request<Region[]>('/admin/regions'),
+  createRegion: (body: unknown) =>
+    request<Region>('/admin/regions', { method: 'POST', body: JSON.stringify(body) }),
+
   districts: () => request<District[]>('/admin/districts'),
+  createDistrict: (body: unknown) =>
+    request<District>('/admin/districts', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  indicateurs: (params: {
+    granularite?: Granularite;
+    niveau?: Niveau;
+    debut?: string;
+    fin?: string;
+  }) => {
+    const q = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v) as [string, string][],
+    );
+    return request<Indicateurs>(`/admin/indicateurs?${q.toString()}`);
+  },
+
+  audit: (limit = 100) => request<AuditEntry[]>(`/admin/audit?limit=${limit}`),
+  connexionsEchouees: () =>
+    request<{ total24h: number }>('/admin/audit/connexions-echouees'),
 
   csbs: () => request<Csb[]>('/admin/csbs'),
   createCsb: (body: unknown) =>
