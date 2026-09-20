@@ -10,7 +10,11 @@ import '../../presentation/beneficiaries/beneficiary_detail_screen.dart';
 import '../../presentation/beneficiaries/beneficiary_form_screen.dart';
 import '../../presentation/beneficiaries/beneficiary_search_screen.dart';
 import '../../presentation/beneficiaries/qr_scan_screen.dart';
+import '../../presentation/care/antenatal_form_screen.dart';
+import '../../presentation/care/consultation_form_screen.dart';
+import '../../presentation/care/vaccination_form_screen.dart';
 import '../../presentation/home/home_screen.dart';
+import '../../presentation/home/profil_screen.dart';
 import '../../presentation/home/splash_screen.dart';
 
 /// Chemins de l'application, nommés en français comme le reste du code.
@@ -27,6 +31,11 @@ abstract final class Routes {
 
   /// `/dossier/<uuid>`
   static const String beneficiary = '/dossier';
+
+  /// Saisies rattachées à un dossier : `<route>/<uuid du dossier>`.
+  static const String consultation = '/consultation';
+  static const String antenatal = '/cpn';
+  static const String vaccination = '/vaccination';
 
   static String beneficiaryPath(String id) => '$beneficiary/$id';
 }
@@ -88,6 +97,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         return Routes.home;
       }
 
+      // Les saisies de soin exigent l'accès au contenu clinique. Le serveur
+      // refuserait de toute façon, mais l'utilisateur ne doit pas se retrouver
+      // devant un formulaire voué à échouer.
+      final saisiesDeSoin = {
+        Routes.consultation: Permission.consultationRecord,
+        Routes.antenatal: Permission.antenatalRecord,
+        Routes.vaccination: Permission.vaccinationRecord,
+      };
+      for (final entree in saisiesDeSoin.entries) {
+        if (location.startsWith(entree.key) && !granted.contains(entree.value)) {
+          return Routes.home;
+        }
+      }
+
       return null;
     },
 
@@ -125,6 +148,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '${Routes.beneficiary}/:id',
         builder: (context, state) =>
             BeneficiaryDetailScreen(beneficiaryId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: Routes.profil,
+        builder: (context, state) => const ProfilScreen(),
+      ),
+
+      // Saisies de soin. Elles portent l'identifiant du dossier dans l'URL
+      // plutôt qu'un objet en mémoire : une reprise après mise en veille
+      // retrouve ainsi le bon dossier.
+      GoRoute(
+        path: '${Routes.consultation}/:id',
+        builder: (context, state) =>
+            ConsultationFormScreen(beneficiaryId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '${Routes.antenatal}/:id',
+        builder: (context, state) =>
+            AntenatalFormScreen(beneficiaryId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '${Routes.vaccination}/:id',
+        builder: (context, state) =>
+            VaccinationFormScreen(beneficiaryId: state.pathParameters['id']!),
       ),
     ],
 
