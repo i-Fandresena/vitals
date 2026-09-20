@@ -32,6 +32,7 @@
 | Enregistrer une activité de PF | ❌ | ✅ | ✅ | ✅ | ❌ |
 | Saisir une donnée communautaire | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Consulter le tableau de bord du CSB | ❌ | 🔸 | 🔸 | ✅ | ❌ |
+| Consulter les indicateurs consolidés | ❌ | ❌ | ❌ | ✅ | ✅ |
 | Exporter les données du CSB | ❌ | ❌ | ❌ | ✅ | ❌ |
 | Gérer les comptes de son CSB | ❌ | ❌ | ❌ | ✅ | ✅ |
 | Gérer les CSB et les rattachements | ❌ | ❌ | ❌ | ❌ | ✅ |
@@ -75,6 +76,12 @@ Accès aux opérations faites dans son seul CSB.
 3. **Les niveaux supérieurs ne voient jamais les dossiers individuels**, seulement
    des indicateurs agrégés (CDC §5). C'est la raison pour laquelle
    `admin_national` est refusé sur toute la colonne « dossier ».
+
+   Ces deux moitiés sont des permissions distinctes : consulter des totaux par
+   district et ouvrir un dossier n'ont aucun rapport, et les confondre
+   reviendrait à ouvrir l'un en accordant l'autre. Les avoir mélangées au
+   départ a produit un refus injustifié du tableau de bord, découvert en
+   production.
 
 4. **Les droits sont appliqués côté serveur, pas seulement dans l'interface.**
    Masquer un bouton n'est pas une permission. Chaque endpoint vérifie le rôle et

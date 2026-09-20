@@ -125,6 +125,13 @@ describe('Matrice des droits', () => {
       expect(hasPermission(role, Permission.ManageCsbs)).toBe(true);
       expect(hasPermission(role, Permission.ManageCsbUsers)).toBe(true);
     });
+
+    it('voit les indicateurs agrégés', () => {
+      // CDC §5 : les niveaux supérieurs voient des totaux. L'oubli de cette
+      // permission renvoyait un 403 sur le tableau de bord, découvert en
+      // production.
+      expect(hasPermission(role, Permission.DashboardAggregated)).toBe(true);
+    });
   });
 
   describe('Invariants', () => {

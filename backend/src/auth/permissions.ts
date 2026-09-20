@@ -45,6 +45,15 @@ export enum Permission {
   /** Indicateurs de tout le centre. */
   DashboardCsb = 'dashboard:csb',
 
+  /**
+   * Indicateurs consolidés au-delà d'un seul centre.
+   *
+   * Distincte de [DashboardCsb] : le CDC §5 veut que les niveaux supérieurs
+   * voient des totaux par district et par région, sans jamais accéder aux
+   * dossiers individuels. Cette permission ouvre l'un sans ouvrir l'autre.
+   */
+  DashboardAggregated = 'dashboard:aggregated',
+
   DataExport = 'data:export',
   ManageCsbUsers = 'users:manage_csb',
   ManageCsbs = 'csbs:manage',
@@ -108,6 +117,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     Permission.CommunityDataRecord,
     Permission.DashboardOwnActivity,
     Permission.DashboardCsb,
+    Permission.DashboardAggregated,
     Permission.DataExport,
     Permission.ManageCsbUsers,
     Permission.ViewAuditLog,
@@ -117,6 +127,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
   // voit que des indicateurs agrégés (CDC §5). L'absence totale de permission
   // « bénéficiaire » est voulue, pas un oubli.
   [UserRole.ADMIN_NATIONAL]: [
+    Permission.DashboardAggregated,
     Permission.ManageCsbUsers,
     Permission.ManageCsbs,
     Permission.ViewAuditLog,

@@ -74,7 +74,7 @@ export class GeographyController {
   // --- Indicateurs agrégés ---
 
   @Get('indicateurs')
-  @RequirePermissions(Permission.DashboardCsb)
+  @RequirePermissions(Permission.DashboardAggregated)
   indicateurs(
     @CurrentUser() user: AuthenticatedUser,
     @Query('debut') debut?: string,

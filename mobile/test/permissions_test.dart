@@ -81,6 +81,16 @@ void main() {
       );
     });
 
+    test('voit les indicateurs agrégés', () {
+      // CDC §5 : les niveaux supérieurs voient des totaux. L'oubli de cette
+      // permission renvoyait un 403 sur le tableau de bord, découvert en
+      // production.
+      expect(
+        UserRole.adminNational.permissions,
+        contains(Permission.dashboardAggregated),
+      );
+    });
+
     test('le drapeau du rôle est cohérent avec ses permissions', () {
       for (final role in UserRole.values) {
         expect(

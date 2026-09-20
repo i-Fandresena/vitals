@@ -41,6 +41,13 @@ enum Permission {
   /// Indicateurs de tout le centre.
   dashboardCsb,
 
+  /// Indicateurs consolidés au-delà d'un seul centre.
+  ///
+  /// Distincte de [dashboardCsb] : le CDC §5 veut que les niveaux supérieurs
+  /// voient des totaux par district et par région, sans jamais accéder aux
+  /// dossiers individuels. Cette permission ouvre l'un sans ouvrir l'autre.
+  dashboardAggregated,
+
   dataExport,
   manageCsbUsers,
   manageCsbs,
@@ -101,6 +108,7 @@ extension RolePermissions on UserRole {
       Permission.communityDataRecord,
       Permission.dashboardOwnActivity,
       Permission.dashboardCsb,
+      Permission.dashboardAggregated,
       Permission.dataExport,
       Permission.manageCsbUsers,
       Permission.viewAuditLog,
@@ -110,6 +118,7 @@ extension RolePermissions on UserRole {
     // ne voit que des indicateurs agrégés (CDC §5). L'absence totale de
     // permission « bénéficiaire » est voulue, pas un oubli.
     UserRole.adminNational => const {
+      Permission.dashboardAggregated,
       Permission.manageCsbUsers,
       Permission.manageCsbs,
       Permission.viewAuditLog,
