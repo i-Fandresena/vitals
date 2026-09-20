@@ -1,5 +1,14 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { AuditAction, Prisma, Sex } from '@prisma/client';
+import {
+  AuditAction,
+  ConsultationType,
+  FamilyPlanningActType,
+  FamilyPlanningMethod,
+  PregnancyOutcome,
+  Prisma,
+  Sex,
+  VaccineCode,
+} from '@prisma/client';
 import { uuidv7 } from 'uuidv7';
 
 import { AuthenticatedUser } from '../auth/types/jwt-payload';
@@ -85,19 +94,24 @@ export class SyncService {
   ): Promise<ResultatMutation> {
     const base = { entityId: mutation.entityId, entityType: mutation.entityType };
 
-    if (mutation.entityType !== 'beneficiaries') {
-      // Les événements de soin n'ont pas encore de producteur : leur saisie
-      // arrive aux tickets 2.4 à 2.7. Plutôt que d'écrire un chemin jamais
-      // exercé, on le refuse explicitement — l'appareil saura que ce n'est pas
-      // une panne réseau et cessera de réessayer.
-      return {
-        ...base,
-        statut: 'rejete',
-        motif: `La synchronisation de « ${mutation.entityType} » arrive avec sa saisie (tickets 2.4 à 2.7).`,
-      };
+    switch (mutation.entityType) {
+      case 'beneficiaries':
+        return this.appliquerBeneficiaire(user, csbId, mutation);
+      case 'pregnancies':
+        return this.appliquerGrossesse(user, csbId, mutation);
+      case 'consultations':
+      case 'vaccinations':
+      case 'family_planning_activities':
+      case 'prenatal_visits':
+        return this.appliquerEvenementDeSoin(user, csbId, mutation);
+      default: {
+        // Inatteignable : le DTO borne déjà `entityType`. La garde est là pour
+        // que l'ajout d'une entité sans chemin de réception casse à la
+        // compilation, et non en production.
+        const jamais: never = mutation.entityType;
+        return { ...base, statut: 'rejete', motif: `Type inconnu : ${String(jamais)}` };
+      }
     }
-
-    return this.appliquerBeneficiaire(user, csbId, mutation);
   }
 
   private async appliquerBeneficiaire(
@@ -174,6 +188,303 @@ export class SyncService {
     );
 
     return { ...base, statut: 'accepte' };
+  }
+
+  /**
+   * Enregistre un événement de soin.
+   *
+   * Ces entités sont **immuables** : une consultation, une vaccination ou une
+   * CPN décrit un fait passé, que rien ne vient corriger ensuite. La réception
+   * est donc un simple « créer si absent » — aucun conflit n'est possible,
+   * puisque deux appareils ne produisent jamais le même identifiant.
+   *
+   * La grossesse fait exception et passe par {@link appliquerGrossesse} : son
+   * issue change quand la femme accouche.
+   */
+  private async appliquerEvenementDeSoin(
+    user: AuthenticatedUser,
+    csbId: string,
+    mutation: MutationDto,
+  ): Promise<ResultatMutation> {
+    const p = mutation.payload;
+    const base = { entityId: mutation.entityId, entityType: mutation.entityType };
+
+    if (this.texte(p.id, 'id') !== mutation.entityId) {
+      return { ...base, statut: 'rejete', motif: 'Identifiant incohérent' };
+    }
+
+    // Le rattachement au centre est vérifié via le dossier : un appareil ne
+    // doit pas pouvoir écrire un acte sur un dossier d'un autre CSB, même en
+    // forgeant la requête.
+    const beneficiaryId = await this.dossierDeLEvenement(mutation, p);
+    const dossier = beneficiaryId
+      ? await this.prisma.beneficiary.findUnique({
+          where: { id: beneficiaryId },
+          select: { csbId: true },
+        })
+      : null;
+
+    if (!dossier) {
+      // Le dossier n'est pas encore arrivé. Ce n'est pas une erreur : si son
+      // envoi a échoué, l'acte le précède dans la file. On laisse l'appareil
+      // réessayer au prochain passage.
+      return {
+        ...base,
+        statut: 'ignore',
+        motif: 'Dossier pas encore reçu, sera renvoyé',
+      };
+    }
+
+    if (dossier.csbId !== csbId) {
+      throw new ForbiddenException('Dossier hors de votre centre');
+    }
+
+    const cree = await this.creerEvenement(mutation, p, user);
+    if (!cree) {
+      // Déjà reçu : l'identifiant vient de l'appareil, donc un renvoi tombe
+      // sur la même ligne. C'est exactement ce qu'on veut.
+      return { ...base, statut: 'ignore', motif: 'Déjà enregistré' };
+    }
+
+    await this.auditEvenement(user, mutation.entityType, mutation.entityId);
+    return { ...base, statut: 'accepte' };
+  }
+
+  /**
+   * Enregistre ou met à jour une grossesse.
+   *
+   * Contrairement aux actes, une grossesse **vit** : elle est ouverte à la
+   * première CPN, puis close par un accouchement. Elle suit donc le même
+   * arbitrage que le dossier — dernier écrit gagne, sur l'horodatage de
+   * l'appareil (décision D6).
+   */
+  private async appliquerGrossesse(
+    user: AuthenticatedUser,
+    csbId: string,
+    mutation: MutationDto,
+  ): Promise<ResultatMutation> {
+    const p = mutation.payload;
+    const base = { entityId: mutation.entityId, entityType: mutation.entityType };
+    const id = this.texte(p.id, 'id');
+
+    if (id !== mutation.entityId) {
+      return { ...base, statut: 'rejete', motif: 'Identifiant incohérent' };
+    }
+
+    const beneficiaryId = this.texte(p.beneficiaryId, 'beneficiaryId');
+    const dossier = await this.prisma.beneficiary.findUnique({
+      where: { id: beneficiaryId },
+      select: { csbId: true },
+    });
+
+    if (!dossier) {
+      return {
+        ...base,
+        statut: 'ignore',
+        motif: 'Dossier pas encore reçu, sera renvoyé',
+      };
+    }
+    if (dossier.csbId !== csbId) {
+      throw new ForbiddenException('Dossier hors de votre centre');
+    }
+
+    // Chaque mutation est datée au moment où l'appareil l'a mise en file :
+    // c'est cet horodatage qui arbitre, comme pour le dossier.
+    const surLAppareil = new Date(mutation.deviceCreatedAt);
+    const champs = {
+      lastPeriodDate: this.dateFacultative(p.lastPeriodDate),
+      expectedDeliveryOn: this.dateFacultative(p.expectedDeliveryOn),
+      gravida: this.entier(p.gravida),
+      para: this.entier(p.para),
+      outcome: this.enumFacultatif(p.outcome, PregnancyOutcome) ?? PregnancyOutcome.EN_COURS,
+      outcomeDate: this.dateFacultative(p.outcomeDate),
+      deviceUpdatedAt: surLAppareil,
+    };
+
+    const existante = await this.prisma.pregnancy.findUnique({
+      where: { id },
+      select: { deviceUpdatedAt: true, version: true },
+    });
+
+    if (!existante) {
+      await this.prisma.pregnancy.create({
+        data: {
+          id,
+          beneficiaryId,
+          ...champs,
+          version: this.entier(p.version) ?? 1,
+          createdByUserId: this.texteFacultatif(p.createdByUserId) ?? user.id,
+          createdAt: this.instant(p.createdAt),
+        },
+      });
+      await this.auditEvenement(user, mutation.entityType, id, AuditAction.CREATE);
+      return { ...base, statut: 'accepte' };
+    }
+
+    if (existante.deviceUpdatedAt >= surLAppareil) {
+      return {
+        ...base,
+        statut: 'ignore',
+        motif: 'Le serveur détient une version plus récente',
+      };
+    }
+
+    await this.prisma.pregnancy.update({
+      where: { id },
+      data: { ...champs, version: existante.version + 1 },
+    });
+    await this.auditEvenement(user, mutation.entityType, id, AuditAction.UPDATE);
+    return { ...base, statut: 'accepte' };
+  }
+
+  /** Dossier auquel se rattache un événement, directement ou via sa grossesse. */
+  private async dossierDeLEvenement(
+    mutation: MutationDto,
+    p: Record<string, unknown>,
+  ): Promise<string> {
+    if (mutation.entityType === 'prenatal_visits') {
+      const grossesse = await this.prisma.pregnancy.findUnique({
+        where: { id: this.texte(p.pregnancyId, 'pregnancyId') },
+        select: { beneficiaryId: true },
+      });
+      // Chaîne vide plutôt qu'une exception : l'appelant la traite comme
+      // « pas encore reçu » et fera réessayer.
+      return grossesse?.beneficiaryId ?? '';
+    }
+    return this.texte(p.beneficiaryId, 'beneficiaryId');
+  }
+
+  /** Renvoie false si l'enregistrement existait déjà. */
+  private async creerEvenement(
+    mutation: MutationDto,
+    p: Record<string, unknown>,
+    user: AuthenticatedUser,
+  ): Promise<boolean> {
+    const id = this.texte(p.id, 'id');
+    const auteur = this.texteFacultatif(p.recordedByUserId) ?? user.id;
+    const creeLe = this.instant(p.createdAt);
+    const surLAppareil = new Date(mutation.deviceCreatedAt);
+
+    switch (mutation.entityType) {
+      case 'consultations': {
+        if (await this.prisma.consultation.findUnique({ where: { id } })) return false;
+        await this.prisma.consultation.create({
+          data: {
+            id,
+            beneficiaryId: this.texte(p.beneficiaryId, 'beneficiaryId'),
+            type: this.enumValue(p.type, ConsultationType, 'type'),
+            occurredOn: this.dateCalendaire(p.occurredOn),
+            motiveCode: this.texte(p.motiveCode, 'motiveCode'),
+            diagnosisCode: this.texteFacultatif(p.diagnosisCode),
+            weightKg: this.nombre(p.weightKg),
+            temperatureC: this.nombre(p.temperatureC),
+            bloodPressureSys: this.entier(p.bloodPressureSys),
+            bloodPressureDia: this.entier(p.bloodPressureDia),
+            treatmentGiven: p.treatmentGiven === true,
+            referred: p.referred === true,
+            referredTo: this.texteFacultatif(p.referredTo),
+            notes: this.texteFacultatif(p.notes),
+            recordedByUserId: auteur,
+            deviceCreatedAt: surLAppareil,
+            createdAt: creeLe,
+          },
+        });
+        return true;
+      }
+
+      case 'vaccinations': {
+        if (await this.prisma.vaccination.findUnique({ where: { id } })) return false;
+        await this.prisma.vaccination.create({
+          data: {
+            id,
+            beneficiaryId: this.texte(p.beneficiaryId, 'beneficiaryId'),
+            vaccine: this.enumValue(p.vaccine, VaccineCode, 'vaccine'),
+            doseNumber: this.entier(p.doseNumber) ?? 1,
+            occurredOn: this.dateCalendaire(p.occurredOn),
+            lotNumber: this.texteFacultatif(p.lotNumber),
+            recordedByUserId: auteur,
+            deviceCreatedAt: surLAppareil,
+            createdAt: creeLe,
+          },
+        });
+        return true;
+      }
+
+      case 'family_planning_activities': {
+        if (await this.prisma.familyPlanningActivity.findUnique({ where: { id } })) {
+          return false;
+        }
+        await this.prisma.familyPlanningActivity.create({
+          data: {
+            id,
+            beneficiaryId: this.texte(p.beneficiaryId, 'beneficiaryId'),
+            method: this.enumValue(p.method, FamilyPlanningMethod, 'method'),
+            actType: this.enumValue(p.actType, FamilyPlanningActType, 'actType'),
+            occurredOn: this.dateCalendaire(p.occurredOn),
+            quantity: this.entier(p.quantity),
+            recordedByUserId: auteur,
+            deviceCreatedAt: surLAppareil,
+            createdAt: creeLe,
+          },
+        });
+        return true;
+      }
+
+      case 'prenatal_visits': {
+        if (await this.prisma.prenatalVisit.findUnique({ where: { id } })) return false;
+        await this.prisma.prenatalVisit.create({
+          data: {
+            id,
+            pregnancyId: this.texte(p.pregnancyId, 'pregnancyId'),
+            visitNumber: this.entier(p.visitNumber) ?? 1,
+            occurredOn: this.dateCalendaire(p.occurredOn),
+            gestationalAgeWeeks: this.entier(p.gestationalAgeWeeks),
+            weightKg: this.nombre(p.weightKg),
+            bloodPressureSys: this.entier(p.bloodPressureSys),
+            bloodPressureDia: this.entier(p.bloodPressureDia),
+            fundalHeightCm: this.nombre(p.fundalHeightCm),
+            fetalHeartRate: this.entier(p.fetalHeartRate),
+            tetanusVaccineGiven: p.tetanusVaccineGiven === true,
+            ironFolateGiven: p.ironFolateGiven === true,
+            malariaPreventionGiven: p.malariaPreventionGiven === true,
+            insecticideNetGiven: p.insecticideNetGiven === true,
+            riskFactorCodes: Array.isArray(p.riskFactorCodes)
+              ? p.riskFactorCodes.filter((c): c is string => typeof c === 'string')
+              : [],
+            referred: p.referred === true,
+            referredTo: this.texteFacultatif(p.referredTo),
+            notes: this.texteFacultatif(p.notes),
+            recordedByUserId: auteur,
+            deviceCreatedAt: surLAppareil,
+            createdAt: creeLe,
+          },
+        });
+        return true;
+      }
+
+      default:
+        throw new Error('Type non pris en charge');
+    }
+  }
+
+  private async auditEvenement(
+    user: AuthenticatedUser,
+    entityType: string,
+    entityId: string,
+    action: AuditAction = AuditAction.CREATE,
+  ): Promise<void> {
+    await this.prisma.auditLog.create({
+      data: {
+        id: uuidv7(),
+        userId: user.id,
+        csbId: user.csbId,
+        action,
+        entityType,
+        entityId,
+        changedFields: [],
+        deviceId: user.deviceId,
+      },
+    });
   }
 
   // ---------------------------------------------------------------------
@@ -299,6 +610,55 @@ export class SyncService {
   private sexe(valeur: unknown): Sex {
     if (valeur !== 'F' && valeur !== 'M') throw new Error('Sexe invalide');
     return valeur;
+  }
+
+  private nombre(valeur: unknown): number | null {
+    return typeof valeur === 'number' && Number.isFinite(valeur) ? valeur : null;
+  }
+
+  private entier(valeur: unknown): number | null {
+    return typeof valeur === 'number' && Number.isInteger(valeur) ? valeur : null;
+  }
+
+  private instant(valeur: unknown): Date {
+    const d = typeof valeur === 'string' ? new Date(valeur) : null;
+    return d && !Number.isNaN(d.getTime()) ? d : new Date();
+  }
+
+  private dateFacultative(valeur: unknown): Date | null {
+    return typeof valeur === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valeur)
+      ? new Date(valeur)
+      : null;
+  }
+
+  /** Variante tolérante : une valeur absente ou vide rend null. */
+  private enumFacultatif<T extends Record<string, string>>(
+    valeur: unknown,
+    enumeration: T,
+  ): T[keyof T] | null {
+    if (typeof valeur === 'string' && Object.values(enumeration).includes(valeur)) {
+      return valeur as T[keyof T];
+    }
+    return null;
+  }
+
+  /**
+   * Valide une valeur d'énumération venue de l'appareil.
+   *
+   * Une version plus ancienne de l'application peut envoyer un code retiré
+   * depuis, une plus récente un code que le serveur ignore. Refuser
+   * explicitement vaut mieux qu'écrire une valeur par défaut, qui fausserait
+   * silencieusement les indicateurs.
+   */
+  private enumValue<T extends Record<string, string>>(
+    valeur: unknown,
+    enumeration: T,
+    champ: string,
+  ): T[keyof T] {
+    if (typeof valeur === 'string' && Object.values(enumeration).includes(valeur)) {
+      return valeur as T[keyof T];
+    }
+    throw new Error(`Valeur de « ${champ} » inconnue`);
   }
 
   private dateCalendaire(valeur: unknown): Date {
