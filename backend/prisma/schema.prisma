@@ -130,22 +130,29 @@ model District {
 }
 
 model Csb {
-  id         String @id @db.Uuid
+  id         String  @id @db.Uuid
   /// Code du centre, utilisé comme préfixe des identifiants lisibles de dossier
-  code       String @unique
+  code       String  @unique
   name       String
   /// Commune de rattachement, simple libellé : le MVP n'agrège pas à ce niveau
   commune    String?
-  districtId String @map("district_id") @db.Uuid
+  districtId String  @map("district_id") @db.Uuid
 
   /// Vrai si aucune sage-femme n'est affectée : les infirmiers du centre sont
   /// alors autorisés à saisir les CPN (voir docs/01-matrice-droits.md).
   allowsNurseAntenatalCare Boolean @default(false) @map("allows_nurse_antenatal_care")
 
+  /// Identifiant de l'unité d'organisation correspondante dans DHIS2.
+  ///
+  /// Nul tant que le rapprochement n'est pas fait : un centre sans cet
+  /// identifiant est simplement absent de l'export, ce qui vaut mieux que de
+  /// deviner et d'écrire les chiffres d'un centre sur un autre.
+  dhis2OrgUnit String? @map("dhis2_org_unit")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  district      District       @relation(fields: [districtId], references: [id])
+  district      District      @relation(fields: [districtId], references: [id])
   users         User[]
   beneficiaries Beneficiary[]
   auditLogs     AuditLog[]
@@ -225,8 +232,8 @@ model Beneficiary {
   /// Format CSB-<code>-<AA>-<séquence>, ex. CSB-0142-26-00731.
   localId String @unique @map("local_id")
 
-  firstName String  @map("first_name")
-  lastName  String  @map("last_name")
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
   sex       Sex
   birthDate DateTime @map("birth_date") @db.Date
 
@@ -247,7 +254,7 @@ model Beneficiary {
 
   // --- Champs de synchronisation ---
   /// Incrémenté à chaque écriture, sert à détecter les écritures concurrentes.
-  version Int @default(1)
+  version         Int      @default(1)
   /// Horodatage de l'appareil au moment de la saisie : arbitre le conflit.
   deviceUpdatedAt DateTime @map("device_updated_at")
   /// Horodatage de réception par le serveur : détecte la dérive d'horloge.
@@ -281,10 +288,10 @@ model Consultation {
   id            String @id @db.Uuid
   beneficiaryId String @map("beneficiary_id") @db.Uuid
 
-  type ConsultationType
+  type       ConsultationType
   /// Date de l'acte, distincte de la date de saisie : une consultation faite
   /// hors ligne peut être saisie plus tard.
-  occurredOn DateTime @map("occurred_on") @db.Date
+  occurredOn DateTime         @map("occurred_on") @db.Date
 
   /// Champs structurés : le texte libre n'est pas exploitable en statistiques
   /// (exigence du ticket 2.4). Les codes restent à aligner sur la nomenclature
@@ -292,10 +299,10 @@ model Consultation {
   motiveCode    String  @map("motive_code")
   diagnosisCode String? @map("diagnosis_code")
 
-  weightKg          Float? @map("weight_kg")
-  temperatureC      Float? @map("temperature_c")
-  bloodPressureSys  Int?   @map("blood_pressure_sys")
-  bloodPressureDia  Int?   @map("blood_pressure_dia")
+  weightKg         Float? @map("weight_kg")
+  temperatureC     Float? @map("temperature_c")
+  bloodPressureSys Int?   @map("blood_pressure_sys")
+  bloodPressureDia Int?   @map("blood_pressure_dia")
 
   treatmentGiven Boolean @default(false) @map("treatment_given")
   /// Référence vers une structure de niveau supérieur
@@ -305,8 +312,8 @@ model Consultation {
   /// Observation libre, jamais utilisée pour les statistiques
   notes String?
 
-  cancelledAt     DateTime? @map("cancelled_at")
-  cancelReason    String?   @map("cancel_reason")
+  cancelledAt  DateTime? @map("cancelled_at")
+  cancelReason String?   @map("cancel_reason")
 
   recordedByUserId String   @map("recorded_by_user_id") @db.Uuid
   deviceCreatedAt  DateTime @map("device_created_at")
@@ -420,8 +427,8 @@ model PrenatalVisit {
   fetalHeartRate      Int?   @map("fetal_heart_rate")
 
   /// Interventions systématiques du suivi prénatal
-  tetanusVaccineGiven Boolean @default(false) @map("tetanus_vaccine_given")
-  ironFolateGiven     Boolean @default(false) @map("iron_folate_given")
+  tetanusVaccineGiven    Boolean @default(false) @map("tetanus_vaccine_given")
+  ironFolateGiven        Boolean @default(false) @map("iron_folate_given")
   /// Traitement préventif intermittent du paludisme
   malariaPreventionGiven Boolean @default(false) @map("malaria_prevention_given")
   insecticideNetGiven    Boolean @default(false) @map("insecticide_net_given")
@@ -456,8 +463,8 @@ model PrenatalVisit {
 model AuditLog {
   id String @id @db.Uuid
 
-  userId String?  @map("user_id") @db.Uuid
-  csbId  String?  @map("csb_id") @db.Uuid
+  userId String?     @map("user_id") @db.Uuid
+  csbId  String?     @map("csb_id") @db.Uuid
   action AuditAction
 
   entityType String  @map("entity_type")
@@ -483,4 +490,30 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([serverTimestamp])
   @@map("audit_logs")
+}
+
+/// Correspondance entre un indicateur MbolaTsara et un élément de données DHIS2.
+///
+/// En base et non dans le code : les identifiants DHIS2 sont propres à chaque
+/// instance nationale. Un changement de serveur, ou un élément de données
+/// renommé côté ministère, ne doit pas demander un nouveau déploiement.
+model Dhis2ElementMapping {
+  /// Clé de l'indicateur, côté MbolaTsara : consultations, cpn, vaccinations,
+  /// planificationFamiliale, nouveauxDossiers.
+  indicator String @id
+
+  /// Identifiant de l'élément de données DHIS2 (11 caractères).
+  dataElement String @map("data_element")
+
+  /// Combinaison d'options de catégorie. Nulle quand l'élément de données
+  /// utilise la combinaison par défaut, que DHIS2 applique alors seul.
+  categoryOptionCombo String? @map("category_option_combo")
+
+  /// Libellé lisible, repris de DHIS2 au moment du rapprochement. Sert à
+  /// relire la correspondance sans interroger le serveur.
+  label String?
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("dhis2_element_mappings")
 }

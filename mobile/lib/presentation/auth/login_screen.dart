@@ -189,21 +189,22 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Container(
-          height: 72,
-          width: 72,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(AppDimens.radiusLarge),
-          ),
-          child: Icon(
+        // Le logo lui-meme, et non un pictogramme generique : c'est le seul
+        // endroit de l'application ou il a la place d'etre reconnu.
+        Image.asset(
+          'assets/branding/embleme.png',
+          height: 96,
+          filterQuality: FilterQuality.medium,
+          // Un appareil qui n'arrive pas a decoder l'image ne doit pas
+          // empecher de se connecter.
+          errorBuilder: (_, _, _) => Icon(
             Icons.health_and_safety_outlined,
-            size: 40,
-            color: theme.colorScheme.onPrimaryContainer,
+            size: 56,
+            color: theme.colorScheme.primary,
           ),
         ),
         const SizedBox(height: AppDimens.space16),
-        Text('Vitals', style: theme.textTheme.headlineMedium),
+        Text('MbolaTsara', style: theme.textTheme.headlineMedium),
         const SizedBox(height: AppDimens.space4),
         Text(
           'Dossiers et activités du centre de santé',

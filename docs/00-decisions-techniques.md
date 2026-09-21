@@ -134,3 +134,25 @@ La seule concession à l'avenir est structurelle et sans coût aujourd'hui : les
 entités portent un rattachement géographique (CSB → commune → district → région)
 pour que l'agrégation multi-niveaux du CDC §5 reste possible sans migration
 douloureuse.
+
+## D12 — Renommage en MbolaTsara : ce qui change, ce qui ne change pas
+
+Le produit s'appelle **MbolaTsara**. Tout ce que voit un utilisateur porte ce
+nom : libellé de l'application sur Android, titres des écrans, messages,
+espace d'administration.
+
+Quatre identifiants techniques gardent volontairement l'ancien nom. Les
+changer coûterait cher pour un gain nul, puisqu'aucun utilisateur ne les voit.
+
+| Identifiant | Valeur | Pourquoi il ne bouge pas |
+|---|---|---|
+| `applicationId` Android | `ai.maternal.vitals` | Android le traite comme l'identité de l'application. Le changer produit une **seconde** application : la mise à jour ne s'installe plus par-dessus, et la base locale chiffrée du téléphone — donc les dossiers pas encore synchronisés — devient inatteignable. |
+| Nom du fichier de base locale | `vitals.sqlite` | Même conséquence : un nouveau nom ouvre une base vide et abandonne l'ancienne sur l'appareil. |
+| Préfixe des QR codes | `vitals:b/` | Il est imprimé sur les cartes déjà remises aux personnes suivies. Un nouveau préfixe rendrait ces cartes illisibles par l'application. |
+| Chemin de déploiement, base PostgreSQL, dépôt | `/opt/vitals`, `vitals` | Renommer demande une migration de la base et une reconfiguration du serveur, sans rien apporter. |
+
+Le nom du paquet Dart (`name: vitals` dans `pubspec.yaml`) reste également :
+il n'apparaît que dans les `import` du code.
+
+Si l'un de ces changements devient souhaitable, le bon moment est **avant** la
+distribution des premières cartes et des premiers téléphones, pas après.

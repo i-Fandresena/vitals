@@ -46,6 +46,13 @@
 
   --color-warning: #9a6300;
   --color-warning-container: #fdefd3;
+
+  /* Elevation tres basse. Une carte doit se detacher du fond sans paraitre
+     flotter : deux ombres superposees, l'une serree pour le contact, l'autre
+     large et tres pale pour la profondeur. La bordure reste, c'est elle qui
+     tient sur un ecran mediocre ou l'ombre disparait. */
+  --shadow-carte: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.10);
+  --shadow-carte-active: 0 1px 2px rgb(15 23 42 / 0.05), 0 12px 28px -12px rgb(15 23 42 / 0.16);
 }
 
 html {

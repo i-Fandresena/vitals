@@ -93,6 +93,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    # L'embleme seul, sans le mot : il s'affiche au-dessus du nom ecrit en
+    # toutes lettres, le repeter en image n'apporterait rien.
+    - assets/branding/embleme.png
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
@@ -127,9 +132,9 @@ flutter:
 # Icone de l'application, generee depuis assets/branding/ par
 #   dart run flutter_launcher_icons
 #
-# Le logo d'origine porte le mot « Vitals » sous le symbole. Il n'est pas
-# repris ici : a 48 dp ce texte serait illisible, et Android affiche deja le
-# nom de l'application sous l'icone. Seul le symbole est utilise.
+# Le logo porte le mot « MbolaTsara » sous le symbole. Il n'est pas repris
+# ici : a 48 dp ce texte serait illisible, et Android affiche deja le nom de
+# l'application sous l'icone. Seul le symbole est utilise.
 flutter_launcher_icons:
   android: ic_launcher
   ios: false

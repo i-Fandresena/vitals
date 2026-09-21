@@ -23,7 +23,7 @@
         android:required="false"/>
 
     <application
-        android:label="Vitals"
+        android:label="MbolaTsara"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:networkSecurityConfig="@xml/network_security_config">

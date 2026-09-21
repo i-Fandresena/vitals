@@ -69,6 +69,7 @@ export class AdminService {
       districtName: csb.district.name,
       regionName: csb.district.region.name,
       allowsNurseAntenatalCare: csb.allowsNurseAntenatalCare,
+      dhis2OrgUnit: csb.dhis2OrgUnit,
       userCount: csb._count.users,
       beneficiaryCount: csb._count.beneficiaries,
     }));
@@ -116,6 +117,10 @@ export class AdminService {
         name: dto.name?.trim(),
         commune: dto.commune?.trim(),
         allowsNurseAntenatalCare: dto.allowsNurseAntenatalCare,
+        // Chaîne vide : le rapprochement est défait, le centre sort de
+        // l'export DHIS2. `undefined` laisserait la valeur en place.
+        dhis2OrgUnit:
+          dto.dhis2OrgUnit === undefined ? undefined : dto.dhis2OrgUnit.trim() || null,
       },
     });
 

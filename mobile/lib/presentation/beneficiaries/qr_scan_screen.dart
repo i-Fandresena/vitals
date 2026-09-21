@@ -73,7 +73,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
         _handling = false;
         _message =
             'Ce code ne correspond à aucun dossier de votre centre.\n'
-            "Vérifiez qu'il s'agit bien d'une carte Vitals.";
+            "Vérifiez qu'il s'agit bien d'une carte MbolaTsara.";
       });
       return;
     }

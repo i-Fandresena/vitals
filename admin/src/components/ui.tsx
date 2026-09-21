@@ -88,7 +88,7 @@ export function Alert({
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-outline-variant bg-white p-5">
+    <div className="rounded-2xl border border-outline-variant bg-white p-5 shadow-[var(--shadow-carte)]">
       {children}
     </div>
   );
@@ -111,10 +111,10 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-outline-variant bg-surface-card p-5">
+    <section className="rounded-2xl border border-outline-variant bg-surface-card p-5 shadow-[var(--shadow-carte)]">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold">{titre}</h3>
+          <h3 className="text-lg font-semibold tracking-tight">{titre}</h3>
           {sous && <p className="text-sm text-on-surface-variant">{sous}</p>}
         </div>
         {action}
@@ -149,10 +149,10 @@ export function StatCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border p-5 ${
+      className={`rounded-2xl border p-5 transition-shadow ${
         enAvant
-          ? 'border-primary bg-primary text-white'
-          : 'border-outline-variant bg-surface-card'
+          ? 'border-primary bg-primary text-white shadow-[var(--shadow-carte-active)]'
+          : 'border-outline-variant bg-surface-card shadow-[var(--shadow-carte)]'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -177,7 +177,7 @@ export function StatCard({
       <p className={`mt-4 text-sm font-medium ${enAvant ? 'text-white/80' : 'text-on-surface-variant'}`}>
         {libelle}
       </p>
-      <p className="text-3xl font-bold tabular-nums">
+      <p className="text-4xl font-bold tracking-tight tabular-nums">
         {valeur.toLocaleString('fr-FR')}
       </p>
       {note && (

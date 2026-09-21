@@ -52,6 +52,12 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
       JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-30d}
+
+      # Remontée DHIS2. Vides, les routes d'export répondent « non configuré »
+      # au lieu d'échouer.
+      DHIS2_URL: ${DHIS2_URL:-}
+      DHIS2_USERNAME: ${DHIS2_USERNAME:-}
+      DHIS2_PASSWORD: ${DHIS2_PASSWORD:-}
       # L'espace d'administration est la seule origine navigateur autorisée.
       # L'application mobile n'est pas soumise au CORS.
       CORS_ORIGINS: https://${ADMIN_DOMAIN}

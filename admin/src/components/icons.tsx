@@ -140,3 +140,12 @@ export function IconFleche({ montante, ...p }: Props & { montante: boolean }) {
     </Trace>
   );
 }
+
+export function IconExport(p: Props) {
+  return (
+    <Trace {...p}>
+      <path d="M12 3v12M8.5 6.5 12 3l3.5 3.5" />
+      <path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" />
+    </Trace>
+  );
+}

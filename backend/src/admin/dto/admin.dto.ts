@@ -53,6 +53,18 @@ export class UpdateCsbDto {
   @IsOptional()
   @IsBoolean()
   allowsNurseAntenatalCare?: boolean;
+
+  /**
+   * Unité d'organisation correspondante dans DHIS2.
+   *
+   * Chaîne vide acceptée pour défaire un rapprochement : un centre mal
+   * rapproché doit pouvoir sortir de l'export sans passer par la base.
+   */
+  @IsOptional()
+  @Matches(/^([A-Za-z][A-Za-z0-9]{10})?$/, {
+    message: "Identifiant DHIS2 attendu : 11 caractères, commençant par une lettre.",
+  })
+  dhis2OrgUnit?: string;
 }
 
 export class CreateUserDto {

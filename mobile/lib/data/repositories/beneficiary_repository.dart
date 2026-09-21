@@ -73,7 +73,7 @@ class BeneficiaryRepository {
 
   /// Ouvre un dossier depuis un QR code scanné.
   ///
-  /// Renvoie `null` si le code n'est pas un dossier Vitals, ou si le dossier
+  /// Renvoie `null` si le code n'est pas un dossier MbolaTsara, ou si le dossier
   /// n'appartient pas au centre de l'utilisateur.
   Future<Beneficiary?> findByQrPayload({
     required String csbId,

@@ -31,7 +31,7 @@ class AuthenticatedUser {
       // droits mal interprétés.
       throw StateError(
         'Rôle "$roleCode" inconnu de cette version de l\'application. '
-        'Mettez à jour Vitals.',
+        'Mettez à jour MbolaTsara.',
       );
     }
 

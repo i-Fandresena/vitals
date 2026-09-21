@@ -45,7 +45,7 @@ abstract final class LocalId {
   ///
   /// Renvoie `null` sur tout code étranger à l'application — un QR de produit,
   /// une URL, un code d'un autre logiciel. Le scanner doit pouvoir dire « ce
-  /// code n'est pas un dossier Vitals » plutôt que d'ouvrir n'importe quoi.
+  /// code n'est pas un dossier MbolaTsara » plutôt que d'ouvrir n'importe quoi.
   static String? parseQrPayload(String? raw) {
     if (raw == null) return null;
 

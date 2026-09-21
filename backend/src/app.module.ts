@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { AdminModule } from './admin/admin.module';
+import { Dhis2Module } from './dhis2/dhis2.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from './auth/guards/permissions.guard';
@@ -20,6 +21,7 @@ import { SyncModule } from './sync/sync.module';
     PrismaModule,
     AuthModule,
     AdminModule,
+    Dhis2Module,
     BeneficiariesModule,
     SyncModule,
   ],

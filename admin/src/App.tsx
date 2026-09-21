@@ -4,18 +4,26 @@ import {
   IconCentres,
   IconComptes,
   IconDeconnexion,
+  IconExport,
   IconGeographie,
   IconIndicateurs,
   IconJournal,
 } from './components/icons';
 import { Centres } from './pages/Centres';
 import { Comptes } from './pages/Comptes';
+import { Dhis2 } from './pages/Dhis2';
 import { Geographie } from './pages/Geographie';
 import { Indicateurs } from './pages/Indicateurs';
 import { Journal } from './pages/Journal';
 import { Login } from './pages/Login';
 
-type Onglet = 'indicateurs' | 'comptes' | 'centres' | 'geographie' | 'journal';
+type Onglet =
+  | 'indicateurs'
+  | 'dhis2'
+  | 'comptes'
+  | 'centres'
+  | 'geographie'
+  | 'journal';
 
 /** Les entrées, groupées par ce qu'on vient y faire.
  *
@@ -28,7 +36,10 @@ const SECTIONS: Array<{
 }> = [
   {
     titre: 'Suivi',
-    entrees: [['indicateurs', 'Indicateurs', IconIndicateurs]],
+    entrees: [
+      ['indicateurs', 'Indicateurs', IconIndicateurs],
+      ['dhis2', 'Remontée DHIS2', IconExport],
+    ],
   },
   {
     titre: 'Administration',
@@ -52,6 +63,10 @@ const SECTIONS: Array<{
  * et deux titres pour le même écran est exactement le genre de bruit que le
  * CDC §7 demande d'éviter. */
 const TITRES: Record<Onglet, { titre: string; sous: string }> = {
+  dhis2: {
+    titre: 'Remontée DHIS2',
+    sous: "Envoi des dénombrements mensuels vers l'entrepôt national.",
+  },
   indicateurs: {
     titre: "Indicateurs",
     sous: "Activité agrégée des centres — aucun dossier individuel n'y figure.",
@@ -116,7 +131,7 @@ export default function App() {
       <div className="min-w-0 flex-1">
         <header className="flex flex-wrap items-center justify-between gap-4 px-5 pt-6 lg:px-0 lg:pt-0">
           <div>
-            <h1 className="text-2xl font-bold">{TITRES[onglet].titre}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{TITRES[onglet].titre}</h1>
             <p className="text-on-surface-variant">{TITRES[onglet].sous}</p>
           </div>
           <ChipUtilisateur user={user} />
@@ -124,6 +139,7 @@ export default function App() {
 
         <main className="px-5 py-6 lg:px-0">
           {onglet === 'indicateurs' && <Indicateurs user={user} />}
+          {onglet === 'dhis2' && <Dhis2 />}
           {onglet === 'comptes' && <Comptes user={user} />}
           {onglet === 'centres' && <Centres user={user} />}
           {onglet === 'geographie' && <Geographie user={user} />}
@@ -153,12 +169,16 @@ function BarreLaterale({
   onDeconnexion: () => void;
 }) {
   return (
-    <aside className="border-b border-outline-variant bg-surface-card lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:w-60 lg:shrink-0 lg:rounded-2xl lg:border lg:p-4">
+    <aside className="border-b border-outline-variant bg-surface-card lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:w-60 lg:shrink-0 lg:rounded-2xl lg:border lg:p-4 lg:shadow-[var(--shadow-carte)]">
       <div className="flex items-center gap-2.5 px-5 py-4 lg:px-1 lg:pb-6 lg:pt-1">
-        <span className="grid size-9 place-items-center rounded-xl bg-primary font-bold text-white">
-          V
-        </span>
-        <span className="text-lg font-bold">Vitals</span>
+        {/* L'emblème seul : le mot est écrit à côté, en texte, où il reste
+            net à toutes les tailles et lisible par un lecteur d'écran. */}
+        <img
+          src="/embleme-mbolatsara.png"
+          alt=""
+          className="size-9 shrink-0 object-contain"
+        />
+        <span className="text-lg font-bold tracking-tight">MbolaTsara</span>
       </div>
 
       <nav className="flex gap-1 overflow-x-auto px-5 pb-3 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-0 lg:pb-0">
@@ -174,7 +194,7 @@ function BarreLaterale({
                 aria-current={onglet === cle ? 'page' : undefined}
                 className={`flex min-h-11 w-full shrink-0 items-center gap-2.5 whitespace-nowrap rounded-xl px-3 font-medium transition-colors ${
                   onglet === cle
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-white shadow-[var(--shadow-carte-active)]'
                     : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
                 }`}
               >

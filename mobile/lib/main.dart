@@ -27,5 +27,5 @@ void main() {
     return;
   }
 
-  runApp(const ProviderScope(child: VitalsApp()));
+  runApp(const ProviderScope(child: MbolaTsaraApp()));
 }

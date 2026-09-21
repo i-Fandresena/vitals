@@ -78,10 +78,87 @@ export function Centres({ user }: { user: SessionUser }) {
                   {csb.beneficiaryCount} dossier{csb.beneficiaryCount > 1 ? 's' : ''}
                 </span>
               </div>
+
+              <RapprochementDhis2 csb={csb} onEnregistre={reload} />
             </Card>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Unité d'organisation DHIS2 d'un centre.
+ *
+ * Éditable ici et non dans un écran à part : c'est une propriété du centre, et
+ * la personne qui fait le rapprochement a la liste des centres sous les yeux.
+ * Un centre sans unité ne part pas dans l'export — mieux vaut le voir sur sa
+ * fiche que le découvrir au moment d'envoyer.
+ */
+function RapprochementDhis2({
+  csb,
+  onEnregistre,
+}: {
+  csb: Csb;
+  onEnregistre: () => Promise<void> | void;
+}) {
+  const [ouvert, setOuvert] = useState(false);
+  const [valeur, setValeur] = useState(csb.dhis2OrgUnit ?? '');
+  const [occupe, setOccupe] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+
+  async function enregistrer() {
+    setErreur(null);
+    setOccupe(true);
+    try {
+      await api.updateCsb(csb.id, { dhis2OrgUnit: valeur.trim() });
+      await onEnregistre();
+      setOuvert(false);
+    } catch (e) {
+      setErreur(e instanceof ApiError ? e.message : 'Enregistrement impossible.');
+    } finally {
+      setOccupe(false);
+    }
+  }
+
+  if (!ouvert) {
+    return (
+      <button
+        onClick={() => setOuvert(true)}
+        className="mt-3 flex w-full items-center justify-between gap-2 rounded-lg border border-outline-variant px-3 py-2 text-left text-sm transition-colors hover:bg-surface-container"
+      >
+        <span className="text-on-surface-variant">DHIS2</span>
+        <span className={csb.dhis2OrgUnit ? 'font-medium' : 'text-on-surface-variant'}>
+          {csb.dhis2OrgUnit ?? 'Non rapproché'}
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 flex flex-col gap-2 rounded-lg border border-outline-variant p-3">
+      <Field
+        label="Unité d'organisation DHIS2"
+        hint="Onze caractères. Laisser vide pour retirer le centre de l'export."
+      >
+        <Input
+          value={valeur}
+          onChange={(e) => setValeur(e.target.value)}
+          placeholder="Rp268JB6Ne4"
+          autoFocus
+          disabled={occupe}
+        />
+      </Field>
+      {erreur && <p className="text-sm text-danger">{erreur}</p>}
+      <div className="flex gap-2">
+        <Button onClick={enregistrer} disabled={occupe}>
+          Enregistrer
+        </Button>
+        <Button variant="secondary" onClick={() => setOuvert(false)} disabled={occupe}>
+          Annuler
+        </Button>
+      </div>
     </div>
   );
 }

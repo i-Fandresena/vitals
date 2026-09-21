@@ -134,8 +134,42 @@ export interface Csb {
   districtName: string;
   regionName: string;
   allowsNurseAntenatalCare: boolean;
+  /** Unité d'organisation DHIS2, nulle tant que le centre n'est pas rapproché. */
+  dhis2OrgUnit: string | null;
   userCount: number;
   beneficiaryCount: number;
+}
+
+export interface CorrespondanceDhis2 {
+  indicator: string;
+  dataElement: string;
+  categoryOptionCombo: string | null;
+  label: string | null;
+}
+
+export interface EtatDhis2 {
+  serveur: string | null;
+  configure: boolean;
+  correspondances: CorrespondanceDhis2[];
+  centres: number;
+  centresRapproches: number;
+}
+
+export interface ResultatExportDhis2 {
+  periode: string;
+  simulation: boolean;
+  valeursEnvoyees: number;
+  centresRetenus: number;
+  centresNonRapproches: string[];
+  indicateursNonRapproches: string[];
+  resume?: {
+    statut: string;
+    importes: number;
+    misAJour: number;
+    ignores: number;
+    rejetes: number;
+    messages: string[];
+  };
 }
 
 export interface AdminUser {
@@ -275,6 +309,20 @@ export const api = {
     request<{ total24h: number }>('/admin/audit/connexions-echouees'),
 
   csbs: () => request<Csb[]>('/admin/csbs'),
+
+  dhis2: () => request<EtatDhis2>('/admin/dhis2'),
+
+  dhis2Correspondances: (correspondances: CorrespondanceDhis2[]) =>
+    request<EtatDhis2>('/admin/dhis2/correspondances', {
+      method: 'PUT',
+      body: JSON.stringify({ correspondances }),
+    }),
+
+  dhis2Export: (periode: string, simulation: boolean) =>
+    request<ResultatExportDhis2>('/admin/dhis2/export', {
+      method: 'POST',
+      body: JSON.stringify({ periode, simulation }),
+    }),
   createCsb: (body: unknown) =>
     request<Csb>('/admin/csbs', { method: 'POST', body: JSON.stringify(body) }),
   updateCsb: (id: string, body: unknown) =>
