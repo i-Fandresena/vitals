@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Installer MbolaTsara</title>
+    <link rel="icon" type="image/png" href="/icone.png" />
+
+    <!--
+      Page de téléchargement de l'application.
+
+      Elle remplace la liste brute de nginx, dont le défaut n'était pas
+      esthétique : « app-arm64-v8a » contre « app-armeabi-v7a » ne veut rien
+      dire pour un responsable de centre, et rien n'expliquait qu'Android
+      refuse par défaut d'installer une application hors magasin.
+
+      Sans dépendance ni fichier annexe : elle se charge sur la connexion d'un
+      CSB, parfois en 2G, et souvent sur le téléphone qu'on est en train
+      d'équiper.
+    -->
+    <style>
+      :root {
+        --primaire: #1a4f76;
+        --primaire-sombre: #123a57;
+        --primaire-clair: #d4e4f2;
+        --accent: #cc4a45;
+        --fond: #f8fafc;
+        --carte: #ffffff;
+        --texte: #334155;
+        --texte-doux: #5a6b80;
+        --trait: #c3cedb;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 0 16px 56px;
+        background: var(--fond);
+        color: var(--texte);
+        font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+
+      main { max-width: 620px; margin: 0 auto; }
+
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 28px 0 8px;
+      }
+      header img { width: 52px; height: 52px; object-fit: contain; }
+      header h1 { margin: 0; font-size: 22px; letter-spacing: -0.02em; }
+      header p { margin: 2px 0 0; color: var(--texte-doux); font-size: 15px; }
+
+      .carte {
+        background: var(--carte);
+        border: 1px solid var(--trait);
+        border-radius: 18px;
+        padding: 20px;
+        margin-top: 16px;
+        box-shadow: 0 1px 2px rgb(15 23 42 / 0.04),
+                    0 8px 24px -14px rgb(15 23 42 / 0.12);
+      }
+      .carte h2 { margin: 0 0 4px; font-size: 18px; letter-spacing: -0.01em; }
+      .carte p.sous { margin: 0 0 16px; color: var(--texte-doux); font-size: 15px; }
+
+      /* Cible tactile large : cette page se manipule debout, à une main. */
+      a.bouton {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 60px;
+        padding: 12px 18px;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 600;
+        background: var(--primaire);
+        color: #fff;
+      }
+      a.bouton:active { background: var(--primaire-sombre); }
+      a.bouton .poids { font-weight: 500; opacity: 0.8; font-size: 14px; }
+
+      a.bouton.second {
+        background: var(--carte);
+        color: var(--texte);
+        border: 1px solid var(--trait);
+      }
+      a.bouton.second:active { background: var(--fond); }
+      a.bouton + a.bouton { margin-top: 10px; }
+
+      .variante { display: block; }
+      .variante .nom { display: block; }
+      .variante .pour {
+        display: block;
+        font-weight: 400;
+        font-size: 14px;
+        opacity: 0.85;
+      }
+
+      ol { margin: 0; padding-left: 22px; }
+      ol li { margin-bottom: 12px; }
+      ol li:last-child { margin-bottom: 0; }
+      ol strong { font-weight: 600; }
+
+      .note {
+        margin-top: 16px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--primaire-clair);
+        color: #0a2740;
+        font-size: 15px;
+      }
+
+      code {
+        display: block;
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--fond);
+        border: 1px solid var(--trait);
+        font-family: ui-monospace, "Cascadia Mono", Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+      }
+
+      footer {
+        margin-top: 28px;
+        color: var(--texte-doux);
+        font-size: 14px;
+        text-align: center;
+      }
+      footer a { color: var(--primaire); }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <header>
+        <img src="/embleme-mbolatsara.png" alt="" />
+        <div>
+          <h1>MbolaTsara</h1>
+          <p>Application des centres de santé de base</p>
+        </div>
+      </header>
+
+      <section class="carte">
+        <h2>Télécharger l'application</h2>
+        <p class="sous" id="conseil">
+          Deux versions existent. Prenez la première si vous hésitez.
+        </p>
+
+        <!--
+          L'ordre est décidé au chargement : la version compatible partout est
+          proposée en premier tant qu'on ne sait rien du téléphone, et la
+          version 64 bits passe devant dès que le navigateur la confirme.
+        -->
+        <div id="liens">
+          <a class="bouton" href="app-armeabi-v7a-release.apk" download data-abi="v7a">
+            <span class="variante">
+              <span class="nom">Version compatible</span>
+              <span class="pour">Fonctionne sur la plupart des téléphones</span>
+            </span>
+            <span class="poids" data-poids="app-armeabi-v7a-release.apk">…</span>
+          </a>
+
+          <a class="bouton second" href="app-arm64-v8a-release.apk" download data-abi="v8a">
+            <span class="variante">
+              <span class="nom">Version 64 bits</span>
+              <span class="pour">Téléphones récents, un peu plus rapide</span>
+            </span>
+            <span class="poids" data-poids="app-arm64-v8a-release.apk">…</span>
+          </a>
+        </div>
+
+        <p class="sous" style="margin: 14px 0 0; font-size: 14px">
+          Installer les deux n'est pas possible : prenez-en une seule. Si elle
+          est refusée à l'installation, essayez l'autre.
+        </p>
+      </section>
+
+      <section class="carte">
+        <h2>Installer sur le téléphone</h2>
+        <p class="sous">
+          Android refuse par défaut les applications qui ne viennent pas du
+          Play Store. C'est normal, et cela se débloque en une fois.
+        </p>
+
+        <ol>
+          <li>
+            Ouvrez le fichier téléchargé, depuis la barre de notifications ou
+            le dossier <strong>Téléchargements</strong>.
+          </li>
+          <li>
+            Au message « installation d'applications inconnues », appuyez sur
+            <strong>Paramètres</strong>, puis autorisez le navigateur à
+            installer des applications.
+          </li>
+          <li>
+            Revenez en arrière et appuyez sur <strong>Installer</strong>.
+          </li>
+        </ol>
+
+        <div class="note">
+          Une mise à jour s'installe par-dessus l'ancienne version.
+          <strong>Ne désinstallez pas l'application</strong> : les dossiers
+          saisis mais pas encore synchronisés sont sur le téléphone, et une
+          désinstallation les efface définitivement.
+        </div>
+      </section>
+
+      <section class="carte">
+        <h2>Vérifier que le fichier est authentique</h2>
+        <p class="sous">
+          Utile avant de déployer sur les téléphones d'un centre. L'empreinte
+          du certificat de signature doit être exactement celle-ci.
+        </p>
+        <code>SHA-256&nbsp;: 35:8A:AB:F8:8C:69:96:72:6B:3E:7B:67:CF:6A:D8:08:04:BD:A3:0B:1D:FD:F7:B2:74:88:31:04:19:50:02:66</code>
+        <code>apksigner verify --print-certs app-armeabi-v7a-release.apk</code>
+      </section>
+
+      <footer>
+        <p>
+          Se connecter demande un compte créé par le responsable du centre.
+          L'application seule ne contient aucune donnée.
+        </p>
+        <p><a href="/">Espace d'administration</a></p>
+      </footer>
+    </main>
+
+    <script>
+      // Poids réels, lus sur le serveur plutôt qu'écrits en dur : ils changent
+      // à chaque version, et un chiffre faux ici se remarquerait tard.
+      for (const el of document.querySelectorAll('[data-poids]')) {
+        fetch(el.dataset.poids, { method: 'HEAD' })
+          .then((r) => {
+            const o = Number(r.headers.get('Content-Length'));
+            el.textContent = o ? Math.round(o / 1048576) + ' Mo' : '';
+          })
+          .catch(() => {
+            el.textContent = '';
+          });
+      }
+
+      // Met la version adaptée en premier, quand le navigateur sait répondre.
+      // Beaucoup de téléphones ne le disent pas : dans ce cas on ne devine
+      // pas, et l'ordre par défaut — la version compatible partout — reste.
+      navigator.userAgentData
+        ?.getHighEntropyValues(['bitness'])
+        .then((info) => {
+          if (info.bitness !== '64') return;
+
+          const liens = document.getElementById('liens');
+          const v8a = liens.querySelector('[data-abi="v8a"]');
+          const v7a = liens.querySelector('[data-abi="v7a"]');
+
+          liens.prepend(v8a);
+          v8a.classList.remove('second');
+          v7a.classList.add('second');
+
+          v8a.querySelector('.pour').textContent =
+            'Recommandée pour ce téléphone';
+          document.getElementById('conseil').textContent =
+            'Ce téléphone accepte la version 64 bits, proposée en premier.';
+        })
+        .catch(() => {});
+    </script>
+  </body>
+</html>
